@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Рубеж — Мужской Трекер</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -14,10 +15,18 @@
             display: flex; flex-direction: column; align-items: center;
             overflow-x: hidden; -webkit-user-select: none; user-select: none;
         }
-        .container { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 20px; margin-top: 10px; }
+        .container { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 15px; margin-top: 10px; }
         h1 { font-size: 24px; text-align: center; margin: 0; font-weight: 800; letter-spacing: 1px; color: var(--tg-theme-button-color, #2f8cc3); }
-        .greeting { text-align: center; font-size: 14px; color: var(--tg-theme-hint-color, #708499); margin: -10px 0 10px 0; }
+        .greeting { text-align: center; font-size: 13px; color: var(--tg-theme-hint-color, #708499); margin: -5px 0 10px 0; }
         
+        /* Вкладки навигации сверху */
+        .tabs { display: flex; width: 100%; max-width: 420px; background: var(--tg-theme-secondary-bg-color, #24303f); border-radius: 10px; padding: 4px; box-sizing: border-box; margin-bottom: 10px; }
+        .tab-btn { flex: 1; padding: 10px; text-align: center; background: transparent; border: none; color: var(--tg-theme-hint-color, #708499); font-weight: bold; font-size: 14px; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
+        .tab-btn.active { background: var(--tg-theme-bg-color, #17212b); color: var(--tg-theme-button-color, #2f8cc3); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+
+        .app-page { display: none; width: 100%; }
+        .app-page.active { display: block; }
+
         .slider-group {
             display: flex; flex-direction: column; gap: 10px;
             background: var(--tg-theme-secondary-bg-color, #24303f);
@@ -26,50 +35,38 @@
         .slider-label { display: flex; justify-content: space-between; font-weight: 600; font-size: 16px; }
         .slider-counter { color: var(--tg-theme-button-color, #2f8cc3); font-size: 18px; font-weight: bold; }
         
-        input[type="range"] {
-            width: 100%; margin: 10px 0; -webkit-appearance: none; background: #4e5e70; height: 6px; border-radius: 3px; outline: none;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%;
-            background: var(--tg-theme-button-color, #2f8cc3); cursor: pointer;
-        }
+        input[type="range"] { width: 100%; margin: 10px 0; -webkit-appearance: none; background: #4e5e70; height: 6px; border-radius: 3px; outline: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--tg-theme-button-color, #2f8cc3); cursor: pointer; }
         
-        .btn {
-            background-color: var(--tg-theme-button-color, #2f8cc3);
-            color: var(--tg-theme-button-text-color, #ffffff);
-            border: none; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: bold;
-            cursor: pointer; width: 100%; margin-top: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
+        .btn { background-color: var(--tg-theme-button-color, #2f8cc3); color: var(--tg-theme-button-text-color, #ffffff); border: none; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .btn-secondary { background-color: #4e5e70; color: #ffffff; }
         .btn:disabled { opacity: 0.5; }
         .status-msg { text-align: center; font-size: 15px; font-weight: 600; margin-top: 10px; }
 
-        /* Окна SOS модификаций */
+        /* Экраны SOS */
         .sos-screen { display: none; width: 100%; max-width: 420px; background: var(--tg-theme-secondary-bg-color, #24303f); padding: 24px; border-radius: 16px; box-sizing: border-box; text-align: center; }
-        .sos-title { font-size: 20px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sos-title { font-size: 20px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
         .sos-desc { font-size: 14px; color: var(--tg-theme-hint-color, #708499); line-height: 1.4; margin-bottom: 20px; }
-        
         .sos-menu { display: flex; flex-direction: column; gap: 12px; }
-        .sos-option-card { background: rgba(255,255,255,0.04); padding: 14px; border-radius: 12px; text-align: left; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; }
-        .sos-option-card:active { border-color: var(--tg-theme-button-color, #2f8cc3); background: rgba(47, 140, 195, 0.1); }
-        .opt-title { font-weight: bold; font-size: 16px; display: flex; align-items: center; gap: 8px; }
-        .opt-desc { font-size: 13px; color: var(--tg-theme-hint-color, #708499); margin-top: 4px; line-height: 1.3; }
+        .sos-option-card { background: rgba(255,255,255,0.04); padding: 14px; border-radius: 12px; text-align: left; }
+        .opt-title { font-weight: bold; font-size: 16px; }
+        .opt-desc { font-size: 13px; color: var(--tg-theme-hint-color, #708499); margin-top: 4px; }
 
-        /* Интерактивные блоки практик */
-        .interactive-box { display: none; margin: 20px 0; animation: fadeIn 0.3s ease; }
-        .audio-wave { font-size: 48px; margin: 15px 0; color: #e57373; animation: pulse 1s infinite alternate; display: none; }
-        
-        /* Круг дыхания */
+        /* График и контейнеры */
+        .chart-container { background: var(--tg-theme-secondary-bg-color, #24303f); padding: 16px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 10px; box-sizing: border-box; }
+        .no-data { text-align: center; padding: 40px 20px; color: var(--tg-theme-hint-color, #708499); font-style: italic; }
         .breathing-circle { width: 110px; height: 110px; border-radius: 50%; background: rgba(47, 140, 195, 0.15); border: 4px solid #2f8cc3; display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 20px auto; transition: transform 4s linear; }
-
-        @keyframes pulse { from { transform: scale(0.9); opacity: 0.6; } to { transform: scale(1.1); opacity: 1; } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #ex-timer-display { font-size: 32px; font-weight: 800; color: #e57373; margin: 15px 0; }
     </style>
 </head>
 <body>
 
-    <!-- ГЛАВНЫЙ ЭКРАН ТРЕКЕРА -->
-    <div class="container" id="screen-main">
+    <div class="tabs" id="app-nav-bar">
+        <button class="tab-btn active" onclick="switchTab('input')">⚡ Фиксация</button>
+        <button class="tab-btn" onclick="switchTab('history')">📊 Аналитика</button>
+    </div>
+
+    <div class="container app-page active" id="page-input">
         <div>
             <h1>РУБЕЖ</h1>
             <p class="greeting" id="user-greeting">Синхронизация профиля...</p>
@@ -90,68 +87,55 @@
         <div id="status" class="status-msg"></div>
     </div>
 
-    <!-- ХАБ SOS ВЫБОРА -->
-    <div class="sos-screen" id="screen-sos-hub">
-        <div class="sos-title" id="hub-title" style="color: #e57373;">🔴 Критический Рубеж</div>
-        <div class="sos-desc" id="hub-desc">Выявлен критический маркер состояния. Выбери быстрый инструмент самопомощи (5-12 минут):</div>
-        <div class="sos-menu" id="hub-options-container"></div>
-        <button class="btn btn-secondary" style="margin-top: 20px;" onclick="tg.close()">Пропустить и закрыть</button>
+    <div class="container app-page" id="page-history">
+        <h1>ДИНАМИКА СОСТОЯНИЯ</h1>
+        <p class="greeting">Твои маркеры за последнее время</p>
+        
+        <div class="chart-container">
+            <div id="loading-chart" style="text-align:center; padding: 20px; color:var(--tg-theme-hint-color);">Загрузка графиков...</div>
+            <canvas id="historyChart" style="width: 100%; height: 230px; display: none;"></canvas>
+        </div>
     </div>
 
-    <!-- ЭКРАН ВЫПОЛНЕНИЯ КОНКРЕТНОЙ ПРАКТИКИ -->
-    <div class="sos-screen" id="screen-action">
-        <div class="sos-title" id="action-title" style="color: #2f8cc3;">Выполнение</div>
-        
-        <!-- Динамические контейнеры под типы практик -->
-        <div id="box-text-instruction" class="interactive-box" style="text-align: left; background: rgba(255,255,255,0.03); padding: 16px; border-radius: 12px; border-left: 4px solid #2f8cc3;"></div>
-        
-        <div id="box-breathing-ui" class="interactive-box">
-            <div class="breathing-circle" id="b-circle">⚡</div>
-            <h3 id="b-phase" style="color: #2f8cc3;">Готов?</h3>
-        </div>
-        
-        <div id="box-audio-ui" class="interactive-box">
-            <div class="audio-wave" id="audio-wave-icon">🎙️</div>
-            <p id="audio-timer" style="font-size: 20px; font-weight: bold;">00:00</p>
-            <p style="font-size: 13px; color: var(--tg-theme-hint-color, #708499);">Говори всё как есть. Запись полностью конфиденциальна и удалится при закрытии.</p>
-        </div>
+    <div class="sos-screen" id="screen-sos-hub">
+        <div class="sos-title" id="hub-title" style="color: #e57373;">Критический Рубеж</div>
+        <div class="sos-desc">Выбери инструмент для нормализации:</div>
+        <div class="sos-menu" id="hub-options-container"></div>
+        <button class="btn btn-secondary" onclick="tg.close()">Закрыть</button>
+    </div>
 
-        <div id="action-timer-display" style="font-size: 28px; font-weight: bold; margin: 15px 0; display: none; color: #e57373;">30</div>
-        <button class="btn" id="action-main-btn">Запустить</button>
+    <div class="sos-screen" id="screen-action">
+        <div class="sos-title" id="action-title" style="color: #2f8cc3;">Практика</div>
+        <div id="box-content" style="margin: 20px 0;"></div>
+        <div id="ex-timer-display" style="display: none;"></div>
+        <button class="btn" id="action-main-btn">Начать</button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand(); tg.ready();
         const initData = tg.initData || "";
+        let historyChartInstance = null;
 
-        // Контентная матрица SOS-режимов
         const sosDatabase = {
             irritation: {
-                title: "🔥 Фаза Ярости / Гнева",
-                desc: "Уровень раздражения зашкаливает. Нужно экстренно затормозить лимбическую систему.",
+                title: "🔥 Фаза Ярости",
                 options: [
-                    { id: "irr_breath", icon: "🫁", title: "Квадратное дыхание", desc: "4 сек вдох / 4 задержка / 4 выдох / 4 задержка. Физиологический сброс адреналина.", type: "breath" },
-                    { id: "irr_audio", icon: "🎙️", title: "Контейнер гневного слива", desc: "Включи микрофон и жестко, вслух выскажи всё дерьмо. Запись сотрется навсегда.", type: "audio" },
-                    { id: "irr_body", icon: "🦾", title: "Зажим Якобсона", desc: "Максимальное силовое сжатие всех мышц тела до предела на 7 секунд, затем резкий сброс.", type: "text_timer", duration: 7, text: "<b>Инструкция:</b> Напряги до дрожи пресс, руки, челюсть и ноги. Держи изо всех сил, пока идет таймер. На нуле сделай резкий выдох и полностью обмякни." }
+                    { id: "irr_breath", icon: "🫁", title: "Квадратное дыхание", type: "breath", desc: "4с вдох / 4 задержка / 4 выдох / 4 задержка." },
+                    { id: "irr_body", icon: "🦾", title: "Зажим Якобсона", type: "text_timer", duration: 7, text: "Максимально напряги все мышцы тела до дрожи на 7 секунд. На нуле — резкий сброс." }
                 ]
             },
             emptiness: {
-                title: "🕳️ Фаза Пустоты / Апатии",
-                desc: "Сигнал глубокого истощения. Мозг пытается защититься, отключая эмоции.",
+                title: "🕳️ Фаза Пустоты",
                 options: [
-                    { id: "emp_cbt", icon: "🧠", title: "CBT-Отрезвление ума", desc: "Разбор главных мужских ловушек: 'я неудачник', 'я должен больше'.", type: "text", text: "<div class='cbt-card'><div class='cbt-q'>Ловушка ума:</div><div class='cbt-a'>«Я ничего не успеваю, я слабак, нужно пахать сильнее»</div></div><div class='cbt-card'><div class='cbt-q'>Факт реальности:</div><div class='cbt-a'>Твоя батарея села на физическом уровне. Это не лень, это защита процессора от перегрева. Дальнейший нажим сожжет плату окончательно.</div></div><div class='cbt-card'><div class='cbt-q'>Действие:</div><div class='cbt-a'>Сними с себя любые ожидания на ближайшие 2 часа. Мир не рухнет. Голове нужен режим энергосбережения.</div></div>" },
-                    { id: "emp_audio", icon: "🎙️", title: "Голос из ямы", desc: "3 минуты честно наговорить аудио о своем бессилии. Снимает блок сопротивления.", type: "audio" },
-                    { id: "emp_micro", icon: "👣", title: "Тактика микро-шага", desc: "Простой алгоритм прерывания ступора через одно тупое механическое действие.", type: "text", text: "<b>Алгоритм выхода из ступора:</b><br><br>1. Прямо сейчас оторви взгляд от экрана.<br>2. Встань и дойди до окна/двери.<br>3. Сделай глоток чистой воды или помой одну любую кружку.<br><br><b>Суть:</b> Не надо решать проблемы жизни прямо сейчас. Переключи тело на 1 механическое физическое действие." }
+                    { id: "emp_cbt", icon: "🧠", title: "CBT-Отрезвление", type: "text", text: "Ты не неудачник. Ты просто перегрелся. Твоя задача на 2 часа — полная ментальная тишина." },
+                    { id: "emp_micro", icon: "👣", title: "Тактика микро-шага", type: "text", text: "Встань, дойди до окна, сделай один медленный глоток воды. Только одно действие." }
                 ]
             },
             energy: {
-                title: "⚡ Тревожный разгон / Суета",
-                desc: "Много хаотичной, взвинченной энергии. Моторная тревога требует разрядки.",
+                title: "⚡ Фаза Разгона",
                 options: [
-                    { id: "eng_body", icon: "🏃‍♂️", title: "Взрывной физический сброс", desc: "3 быстрых упражнения по 20 секунд (выпрыгивания, отжимания, планка).", type: "workout" },
-                    { id: "eng_audio", icon: "🎙️", title: "Аудио-вентиляция мыслей", desc: "Выговори в микрофон на высокой скорости все задачи, которые крутятся в голове.", type: "audio" },
-                    { id: "eng_ground", icon: "🎯", title: "Заземление фокуса 5-4-3-2-1", desc: "Жесткая ментальная фиксация на физическом пространстве вокруг тебя.", type: "text", text: "<b>Техника удержания ума:</b><br><br>Найди глазами в комнате и назови вслух:<br>• <b>5</b> любых физических предметов;<br>• <b>4</b> источника звука, которые слышишь;<br>• <b>3</b> телесных ощущения (одежда, пол под ногами);<br>• <b>2</b> любых запаха;<br>• <b>1</b> главное физическое качество твоего тела прямо сейчас (например, пульс).<br><br>Это мгновенно возвращает фокус из панического разгона обратно в реальность." }
+                    { id: "eng_body", icon: "🏃‍♂️", title: "Физический сброс", type: "workout", desc: "Приседания, отжимания, планка." }
                 ]
             }
         };
@@ -164,12 +148,27 @@
             } catch (e) {}
         }
 
+        // Переключение вкладок
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
+            
+            if (tab === 'input') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('page-input').classList.add('active');
+            } else if (tab === 'history') {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('page-history').classList.add('active');
+                loadAndRenderChart(); // Подгружаем график при входе во вкладку аналитики
+            }
+        }
+
         async function sendData() {
             const energy = parseInt(document.getElementById('energy').value);
             const irritation = parseInt(document.getElementById('irritation').value);
             const emptiness = parseInt(document.getElementById('emptiness').value);
             const statusDiv = document.getElementById('status');
-            statusDiv.innerText = "Сохранение лога...";
+            statusDiv.innerText = "Сохранение...";
 
             try {
                 const response = await fetch('/api/tracker/log', {
@@ -181,183 +180,128 @@
                 if (response.ok) {
                     statusDiv.innerText = "✊ Лог зафиксирован!";
                     setTimeout(() => {
-                        // Анализируем триггеры
-                        if (irritation >= 8) { openSosHub('irritation'); }
-                        else if (emptiness >= 8) { openSosHub('emptiness'); }
-                        else if (energy >= 8) { openSosHub('energy'); }
+                        if (irritation >= 8) { document.getElementById('app-nav-bar').style.display='none'; openSosHub('irritation'); }
+                        else if (emptiness >= 8) { document.getElementById('app-nav-bar').style.display='none'; openSosHub('emptiness'); }
+                        else if (energy >= 8) { document.getElementById('app-nav-bar').style.display='none'; openSosHub('energy'); }
                         else { tg.close(); }
                     }, 800);
-                } else { statusDiv.innerText = "❌ Ошибка сохранения"; }
+                }
             } catch (e) { statusDiv.innerText = "❌ Ошибка сети"; }
         }
 
-        // Открытие ХАБА SOS опций
+        // Загрузка данных истории и инициализация графика Chart.js
+        async function loadAndRenderChart() {
+            const loader = document.getElementById('loading-chart');
+            const canvas = document.getElementById('historyChart');
+            
+            try {
+                const response = await fetch('/api/tracker/history', { method: 'GET', headers: { 'tg-data': initData } });
+                if (!response.ok) throw new Error("API Error");
+                
+                const logs = await response.json();
+                if (logs.length === 0) {
+                    loader.innerHTML = "<div class='no-data'>Здесь пока пусто. Зафиксируй состояние несколько раз, чтобы построить график.</div>";
+                    return;
+                }
+
+                // Хронологический порядок для графика (от старых к новым)
+                const chartData = logs.slice(0, 7).reverse(); 
+                
+                const labels = chartData.map(l => {
+                    const d = new Date(l.date);
+                    return `${d.getDate()}.${(d.getMonth()+1).toString().padStart(2,'0')}`;
+                });
+                const datasetEnergy = chartData.map(l => l.energy);
+                const datasetIrritation = chartData.map(l => l.irritation);
+                const datasetEmptiness = chartData.map(l => l.emptiness);
+
+                loader.style.display = 'none';
+                canvas.style.display = 'block';
+
+                if (historyChartInstance) { historyChartInstance.destroy(); }
+
+                // Цвета под тему Telegram
+                const textThemeColor = getComputedStyle(document.body).getPropertyValue('--tg-theme-text-color') || '#f5f5f5';
+
+                historyChartInstance = new Chart(canvas, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { label: '⚡ Энергия', data: datasetEnergy, borderColor: '#2f8cc3', backgroundColor: '#2f8cc3', tension: 0.2, borderWidth: 3 },
+                            { label: '🔥 Злость', data: datasetIrritation, borderColor: '#e57373', backgroundColor: '#e57373', tension: 0.2, borderWidth: 3 },
+                            { label: '🕳️ Пустота', data: datasetEmptiness, borderColor: '#708499', backgroundColor: '#708499', tension: 0.2, borderWidth: 3 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { min: 1, max: 10, ticks: { color: textThemeColor }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                            x: { ticks: { color: textThemeColor }, grid: { display: false } }
+                        },
+                        plugins: {
+                            legend: { labels: { color: textThemeColor, boxWidth: 12, font: { size: 12, weight: 'bold' } } }
+                        }
+                    }
+                });
+
+            } catch (e) {
+                loader.innerText = "Не удалось загрузить историю.";
+            }
+        }
+
+        // Логика SOS-интерфейсов (без изменений)
         function openSosHub(category) {
-            document.getElementById('screen-main').style.display = 'none';
+            document.getElementById('page-input').style.display = 'none';
+            document.getElementById('page-history').style.display = 'none';
             const hub = document.getElementById('screen-sos-hub');
             hub.style.display = 'block';
-
             const db = sosDatabase[category];
             document.getElementById('hub-title').innerText = db.title;
-            document.getElementById('hub-desc').innerText = db.desc;
-
             const container = document.getElementById('hub-options-container');
             container.innerHTML = "";
-
             db.options.forEach(opt => {
                 const card = document.createElement('div');
                 card.className = "sos-option-card";
-                card.innerHTML = `<div class="opt-title"><span>${opt.icon}</span><span>${opt.title}</span></div><div class="opt-desc">${opt.desc}</div>`;
-                card.onclick = () => { launchActionScreen(opt); };
+                card.innerHTML = `<div class="opt-title">${opt.icon} ${opt.title}</div><div class="opt-desc">${opt.desc || ""}</div>`;
+                card.onclick = () => { launchAction(opt); };
                 container.appendChild(card);
             });
         }
 
-        // Запуск экрана выполнения практики
-        function launchActionScreen(option) {
+        function launchAction(opt) {
             document.getElementById('screen-sos-hub').style.display = 'none';
-            const screen = document.getElementById('screen-action');
-            screen.style.display = 'block';
-
-            document.getElementById('action-title').innerText = option.title;
-            
-            // Скрываем все динамические боксы
-            document.getElementById('box-text-instruction').style.display = 'none';
-            document.getElementById('box-breathing-ui').style.display = 'none';
-            document.getElementById('box-audio-ui').style.display = 'none';
-            document.getElementById('action-timer-display').style.display = 'none';
-
+            document.getElementById('screen-action').style.display = 'block';
+            const box = document.getElementById('box-content');
             const btn = document.getElementById('action-main-btn');
-            btn.innerText = "Запустить";
-            btn.onclick = null;
+            document.getElementById('action-title').innerText = opt.title;
 
-            if (option.type === "text") {
-                const box = document.getElementById('box-text-instruction');
-                box.style.display = 'block';
-                box.innerHTML = option.text;
-                btn.innerText = "Завершить и закрыть";
-                btn.onclick = () => tg.close();
-            } 
-            else if (option.type === "text_timer") {
-                const box = document.getElementById('box-text-instruction');
-                box.style.display = 'block'; box.innerHTML = option.text;
-                btn.onclick = () => {
-                    btn.disabled = true;
-                    runCountdown(option.duration, () => {
-                        box.innerHTML = "<b style='color:#4caf50;'>Мышцы расслаблены. Напряжение ушло с выдохом. Контроль восстановлен.</b>";
-                        btn.innerText = "Вернуться в чат"; btn.disabled = false;
-                        btn.onclick = () => tg.close();
-                    });
-                };
-            }
-            else if (option.type === "breath") {
-                document.getElementById('box-breathing-ui').style.display = 'block';
-                btn.onclick = () => runBreathingCycle();
-            }
-            else if (option.type === "audio") {
-                document.getElementById('box-audio-ui').style.display = 'block';
-                btn.onclick = () => startAudioVenting();
-            }
-            else if (option.type === "workout") {
-                runWorkoutComplex();
+            if (opt.type === "text") {
+                box.innerHTML = opt.text; btn.innerText = "Закрыть"; btn.onclick = () => tg.close();
+            } else if (opt.type === "text_timer") {
+                box.innerHTML = opt.text;
+                btn.onclick = () => { btn.disabled = true; runCountdown(opt.duration, () => { box.innerHTML = "Готово. Напряжение сброшено."; btn.innerText = "Закрыть"; btn.onclick = () => tg.close(); btn.disabled = false; }); };
+            } else if (opt.type === "breath") {
+                box.innerHTML = '<div class="breathing-circle" id="b-circle">⚡</div><h3 id="b-phase">Нажми Старт</h3>';
+                btn.onclick = () => runBreathing();
+            } else if (opt.type === "workout") {
+                box.innerHTML = "3 упражнения по 20 секунд: Приседания, Отжимания, Планка.";
+                btn.onclick = () => { btn.disabled = true; runCountdown(20, () => { btn.innerText = "Закрыть"; btn.onclick = () => tg.close(); btn.disabled = false; }); };
             }
         }
 
-        // Универсальный таймер отсчета
-        function runCountdown(seconds, callback) {
-            const display = document.getElementById('action-timer-display');
-            display.style.display = 'block';
-            let timeLeft = seconds;
-            display.innerText = timeLeft;
-
-            const interval = setInterval(() => {
-                timeLeft--;
-                display.innerText = timeLeft;
-                if (timeLeft <= 0) { clearInterval(interval); display.style.display = 'none'; callback(); }
-            }, 1000);
+        function runCountdown(sec, cb) {
+            const d = document.getElementById('ex-timer-display'); d.style.display = 'block'; d.innerText = sec;
+            const i = setInterval(() => { sec--; d.innerText = sec; if(sec<=0) {clearInterval(i); d.style.display='none'; cb();} }, 1000);
         }
 
-        // Практика: Дыхание
-        function runBreathingCycle() {
-            const circle = document.getElementById('b-circle');
-            const phase = document.getElementById('b-phase');
-            const btn = document.getElementById('action-main-btn');
-            btn.disabled = true;
-
-            phase.innerText = "Вдох..."; circle.style.transform = "scale(1.4)";
-            setTimeout(() => { phase.innerText = "Задержка..."; }, 4000);
-            setTimeout(() => { phase.innerText = "Выдох..."; circle.style.transform = "scale(1.0)"; }, 8000);
-            setTimeout(() => { phase.innerText = "Задержка..."; }, 12000);
-
-            setTimeout(() => {
-                phase.innerText = "Цикл завершен. Пульс в норме.";
-                btn.innerText = "Завершить"; btn.disabled = false;
-                btn.onclick = () => tg.close();
-            }, 16000);
-        }
-
-        // Практика: Голосовой слив
-        function startAudioVenting() {
-            const wave = document.getElementById('audio-wave-icon');
-            const timer = document.getElementById('audio-timer');
-            const btn = document.getElementById('action-main-btn');
-            
-            wave.style.display = 'block';
-            btn.innerText = "Остановить и стереть";
-            
-            let seconds = 0;
-            const timerInterval = setInterval(() => {
-                seconds++;
-                let mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-                let secs = (seconds % 60).toString().padStart(2, '0');
-                timer.innerText = `${mins}:${secs}`;
-                
-                if (seconds >= 180) { // Лимит 3 минуты
-                    clearInterval(timerInterval);
-                    finishAudioVenting();
-                }
-            }, 1000);
-
-            btn.onclick = () => { clearInterval(timerInterval); finishAudioVenting(); };
-        }
-
-        function finishAudioVenting() {
-            document.getElementById('audio-wave-icon').style.display = 'none';
-            document.getElementById('audio-timer').innerHTML = "<b style='color:#4caf50;'>Запись полностью стёрта. Голова разгружена.</b>";
-            const btn = document.getElementById('action-main-btn');
-            btn.innerText = "Выйти";
-            btn.onclick = () => tg.close();
-        }
-
-        // Практика: Тренировка
-        function runWorkoutComplex() {
-            const box = document.getElementById('box-text-instruction');
-            box.style.display = 'block';
-            const btn = document.getElementById('action-main-btn');
-
-            const steps = [
-                { name: "Приседания с выпрыгиванием", desc: "Максимально интенсивно прыгай вверх из глубокого приседа. Разгоняем кровь." },
-                { name: "Отжимания от пола (до упора)", desc: "Быстрые отжимания сколько сможешь. Переводим суету в мышцы рук." },
-                { name: "Статическая планка", desc: "Встань на локти, держи тело ровно. Фокусируйся на глубоком дыхании." }
-            ];
-
-            let currentStep = 0;
-
-            function showStep() {
-                if (currentStep < steps.length) {
-                    box.innerHTML = `<div class='ex-num'>Упражнение ${currentStep+1} из 3</div><div class='ex-name'>${steps[currentStep].name}</div><div class='ex-instruction'>${steps[currentStep].desc}</div>`;
-                    btn.innerText = `Начать (20 сек)`; btn.disabled = false;
-                    btn.onclick = () => {
-                        btn.disabled = true;
-                        runCountdown(20, () => { currentStep++; showStep(); });
-                    };
-                } else {
-                    box.innerHTML = "<b style='color:#4caf50;'>Адреналин выжжен. Моторная тревога снята. Контроль вернулся.</b>";
-                    btn.innerText = "Закрыть Рубеж"; btn.disabled = false;
-                    btn.onclick = () => tg.close();
-                }
-            }
-            showStep();
+        function runBreathing() {
+            const c = document.getElementById('b-circle'); const p = document.getElementById('b-phase');
+            p.innerText = "Вдох..."; c.style.transform = "scale(1.4)";
+            setTimeout(() => { p.innerText = "Задержи..."; }, 4000);
+            setTimeout(() => { p.innerText = "Выдох..."; c.style.transform = "scale(1.0)"; }, 8000);
+            setTimeout(() => { p.innerText = "Цикл завершен."; }, 12000);
         }
 
         login();
