@@ -6,6 +6,7 @@ import json
 import uvicorn
 from datetime import datetime
 from contextlib import asynccontextmanager
+from urllib.parse import parse_qsl
 from fastapi import FastAPI, Header, HTTPException, Depends
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
@@ -68,14 +69,23 @@ def verify_telegram_data(init_data: str) -> dict:
     if not BOT_TOKEN:
         raise HTTPException(status_code=500, detail="Telegram Bot Token is not configured")
     try:
-        parsed_data = dict(qc.split("=") for qc in init_data.split("&"))
-        hash_value = parsed_data.pop("hash")
-        data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(parsed_data.items()))
+        # parse_qsl автоматически очищает строку от URL-кодирования (%7B -> {, %22 -> " и т.д.)
+        params = dict(parse_qsl(init_data))
+        if "hash" not in params:
+            raise HTTPException(status_code=401, detail="Missing hash")
+            
+        hash_value = params.pop("hash")
+        
+        # Собираем строку проверки из декодированных параметров, как требует Telegram
+        data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(params.items()))
+        
         secret_key = hmac.new(b"WebAppData", BOT_TOKEN.encode(), hashlib.sha256).digest()
         calculated_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+        
         if calculated_hash != hash_value:
             raise HTTPException(status_code=401, detail="Verification failed")
-        return json.loads(parsed_data["user"])
+            
+        return json.loads(params["user"])
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid session data")
 
@@ -102,17 +112,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Rubezh API", lifespan=lifespan)
 
-# --- ЭНДПОИНТ ИНТЕРФЕЙСА (Читаем из внешнего HTML-файла) ---
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
-    # Поскольку корневая папка в Railway — это backend, файл index.html лежит прямо в корне сборки
     try:
         with open("index.html", "r", encoding="utf-8") as f:
             return f.read()
     except FileNotFoundError:
         return "<h3>Frontend file 'index.html' not found inside backend directory.</h3>"
 
-# --- ЭНДПОИНТЫ API ---
 @app.post("/api/auth/login")
 async def login_or_register(tg_data: str = Header(...), db: AsyncSession = Depends(get_db)):
     tg_user = verify_telegram_data(tg_data)
