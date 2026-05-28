@@ -1,1 +1,138 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Рубеж — Мужской Трекер</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, #17212b);
+            color: var(--tg-theme-text-color, #f5f5f5);
+            margin: 0; padding: 16px;
+            display: flex; flex-direction: column; align-items: center;
+            -webkit-user-select: none; user-select: none;
+        }
+        .container { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 20px; margin-top: 10px; }
+        h1 { font-size: 24px; text-align: center; margin: 0; font-weight: 800; letter-spacing: 1px; color: var(--tg-theme-button-color, #2f8cc3); }
+        .greeting { text-align: center; font-size: 14px; color: var(--tg-theme-hint-color, #708499); margin: -10px 0 10px 0; }
+        .slider-group {
+            display: flex; flex-direction: column; gap: 10px;
+            background: var(--tg-theme-secondary-bg-color, #24303f);
+            padding: 16px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .slider-label { display: flex; justify-content: space-between; font-weight: 600; font-size: 16px; }
+        .slider-counter { color: var(--tg-theme-button-color, #2f8cc3); font-size: 18px; font-weight: bold; }
+        input[type="range"] {
+            width: 100%; margin: 10px 0; -webkit-appearance: none; background: #4e5e70; height: 6px; border-radius: 3px; outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%;
+            background: var(--tg-theme-button-color, #2f8cc3); cursor: pointer; transition: transform 0.1s;
+        }
+        input[type="range"]::-webkit-slider-thumb:active { transform: scale(1.2); }
+        .btn {
+            background-color: var(--tg-theme-button-color, #2f8cc3);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: bold;
+            cursor: pointer; width: 100%; margin-top: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .btn:disabled { opacity: 0.5; }
+        .status-msg { text-align: center; font-size: 15px; font-weight: 600; margin-top: 10px; }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div>
+            <h1>РУБЕЖ</h1>
+            <p class="greeting" id="user-greeting">Синхронизация профиля...</p>
+        </div>
 
+        <div class="slider-group">
+            <div class="slider-label"><span>⚡ Энергия</span><span class="slider-counter" id="energy-val">5</span></div>
+            <input type="range" id="energy" min="1" max="10" value="5" oninput="document.getElementById('energy-val').innerText = this.value">
+        </div>
+
+        <div class="slider-group">
+            <div class="slider-label"><span>🔥 Раздражение</span><span class="slider-counter" id="irritation-val">5</span></div>
+            <input type="range" id="irritation" min="1" max="10" value="5" oninput="document.getElementById('irritation-val').innerText = this.value">
+        </div>
+
+        <div class="slider-group">
+            <div class="slider-label"><span>🕳️ Пустота</span><span class="slider-counter" id="emptiness-val">5</span></div>
+            <input type="range" id="emptiness" min="1" max="10" value="5" oninput="document.getElementById('emptiness-val').innerText = this.value">
+        </div>
+
+        <button class="btn" id="submit-btn" onclick="sendData()">Зафиксировать состояние</button>
+        <div id="status" class="status-msg"></div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+
+        const initData = tg.initData || "";
+
+        async function login() {
+            if (!initData) {
+                document.getElementById('user-greeting').innerText = "Режим симуляции (Вне Telegram)";
+                return;
+            }
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'tg-data': initData }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('user-greeting').innerText = `Приветствуем, ${data.first_name}`;
+                } else {
+                    document.getElementById('user-greeting').innerText = "Ошибка авторизации сессии";
+                }
+            } catch (e) {
+                document.getElementById('user-greeting').innerText = "Ошибка связи с сервером";
+            }
+        }
+
+        async function sendData() {
+            const energy = parseInt(document.getElementById('energy').value);
+            const irritation = parseInt(document.getElementById('irritation').value);
+            const emptiness = parseInt(document.getElementById('emptiness').value);
+            const statusDiv = document.getElementById('status');
+            const btn = document.getElementById('submit-btn');
+
+            statusDiv.className = "status-msg";
+            statusDiv.innerText = "Сохранение в базу...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/tracker/log', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'tg-data': initData },
+                    body: JSON.stringify({ energy, irritation, emptiness })
+                });
+
+                if (response.ok) {
+                    statusDiv.className = "status-msg success";
+                    statusDiv.innerText = "✊ Состояние зафиксировано на Рубеже!";
+                    setTimeout(() => { tg.close(); }, 1500);
+                } else {
+                    statusDiv.className = "status-msg error";
+                    statusDiv.innerText = "❌ Ошибка сохранения данных";
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                statusDiv.className = "status-msg error";
+                statusDiv.innerText = "❌ Сбой сети";
+                btn.disabled = false;
+            }
+        }
+
+        login();
+    </script>
+</body>
+</html>
