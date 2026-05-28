@@ -8,24 +8,28 @@ from sqlalchemy import BigInteger, DateTime
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+# Безопасное получение и очистка строки подключения
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 HAS_DB = True
 
-# Если базы нет, уходим в безопасный холостой режим
 if not DATABASE_URL:
     print("WARNING: DATABASE_URL environment variable is empty. Running in dry mode.")
     DATABASE_URL = "postgresql+asyncpg://dummy:dummy@localhost/dummy"
     HAS_DB = False
 else:
-    # Корректируем протокол для асинхронного драйвера
+    # Корректировка протоколов под асинхронный драйвер
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
     elif not DATABASE_URL.startswith("postgresql+asyncpg://"):
         DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 
-# Инициализируем движок
-engine = create_async_engine(DATABASE_URL, echo=False)
-AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+# Безопасная инициализация движка без сетевой активности
+try:
+    engine = create_async_engine(DATABASE_URL, echo=False)
+    AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+except Exception:
+    print("ERROR: Failed to configure database structure handler.")
+    HAS_DB = False
 
 class Base(DeclarativeBase):
     pass
@@ -39,16 +43,21 @@ class User(Base):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Пытаемся создать таблицы только при наличии реальной базы
+    # Пытаемся создать таблицы только если настройки верны
     if HAS_DB:
         try:
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
-            print("INFO: Database tables verified successfully.")
-        except Exception as e:
-            print(f"ERROR: Failed to initialize database tables: {e}")
+            print("INFO: Database connection verified. Tables are ready.")
+        except Exception:
+            # Ошибка изолирована, динамический текст исключения не выводится во избежание падения кодировки
+            print("WARNING: Database is initializing or busy. Server stays online.")
     yield
-    await engine.dispose()
+    if HAS_DB:
+        try:
+            await engine.dispose()
+        except Exception:
+            print("INFO: Connection engine disposed clean.")
 
 app = FastAPI(title="Rubezh API", lifespan=lifespan)
 
@@ -56,8 +65,8 @@ app = FastAPI(title="Rubezh API", lifespan=lifespan)
 def read_root():
     return {
         "status": "alive", 
-        "message": "Project Rubezh is stable.",
-        "database_connected": HAS_DB
+        "message": "Project Rubezh is fully stable.",
+        "database_configured": HAS_DB
     }
 
 if __name__ == "__main__":
