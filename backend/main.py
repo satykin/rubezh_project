@@ -9,21 +9,21 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 DATABASE_URL = os.getenv("DATABASE_URL")
-HAS_DB = True  # Флаг наличия реальной базы
+HAS_DB = True
 
-# Если переменной нет, включаем режим заглушки, но опускаем флаг HAS_DB
+# Если базы нет, уходим в безопасный холостой режим
 if not DATABASE_URL:
-    print("⚠️ ВНИМАНИЕ: Переменная DATABASE_URL пуста! Сервер работает вхолостую.")
+    print("WARNING: DATABASE_URL environment variable is empty. Running in dry mode.")
     DATABASE_URL = "postgresql+asyncpg://dummy:dummy@localhost/dummy"
     HAS_DB = False
 else:
-    # Исправление протокола для Railway
+    # Корректируем протокол для асинхронного драйвера
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
     elif not DATABASE_URL.startswith("postgresql+asyncpg://"):
         DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 
-# Создаем движок базы (он создается в любом случае, чтобы код не ругался)
+# Инициализируем движок
 engine = create_async_engine(DATABASE_URL, echo=False)
 AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
@@ -39,24 +39,24 @@ class User(Base):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Таблицы создаем ТОЛЬКО если флаг HAS_DB равен True
+    # Пытаемся создать таблицы только при наличии реальной базы
     if HAS_DB:
         try:
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
-            print("✅ База данных успешно подключена, таблицы проверены.")
+            print("INFO: Database tables verified successfully.")
         except Exception as e:
-            print(f"❌ Ошибка при создании таблиц: {e}")
+            print(f"ERROR: Failed to initialize database tables: {e}")
     yield
     await engine.dispose()
 
-app = FastAPI(title="Рубеж API", lifespan=lifespan)
+app = FastAPI(title="Rubezh API", lifespan=lifespan)
 
 @app.get("/")
 def read_root():
     return {
         "status": "alive", 
-        "message": "Project Rubezh is alive. Safeguard active.",
+        "message": "Project Rubezh is stable.",
         "database_connected": HAS_DB
     }
 
