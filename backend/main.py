@@ -69,14 +69,11 @@ def verify_telegram_data(init_data: str) -> dict:
     if not BOT_TOKEN:
         raise HTTPException(status_code=500, detail="Telegram Bot Token is not configured")
     try:
-        # parse_qsl автоматически очищает строку от URL-кодирования (%7B -> {, %22 -> " и т.д.)
         params = dict(parse_qsl(init_data))
         if "hash" not in params:
             raise HTTPException(status_code=401, detail="Missing hash")
             
         hash_value = params.pop("hash")
-        
-        # Собираем строку проверки из декодированных параметров, как требует Telegram
         data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(params.items()))
         
         secret_key = hmac.new(b"WebAppData", BOT_TOKEN.encode(), hashlib.sha256).digest()
@@ -92,7 +89,8 @@ def verify_telegram_data(init_data: str) -> dict:
 async def get_current_user(tg_data: str = Header(...), db: AsyncSession = Depends(get_db)) -> User:
     tg_user = verify_telegram_data(tg_data)
     result = await db.execute(select(User).where(User.telegram_id == tg_user["id"]))
-    user = result.scalar_one_or_not_none()
+    # Исправлено на правильный метод SQLAlchemy
+    user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not registered")
     return user
@@ -125,7 +123,8 @@ async def login_or_register(tg_data: str = Header(...), db: AsyncSession = Depen
     tg_user = verify_telegram_data(tg_data)
     tg_id = tg_user["id"]
     result = await db.execute(select(User).where(User.telegram_id == tg_id))
-    user = result.scalar_one_or_not_none()
+    # Исправлено на правильный метод SQLAlchemy
+    user = result.scalar_one_or_none()
     if not user:
         user = User(telegram_id=tg_id)
         db.add(user)
