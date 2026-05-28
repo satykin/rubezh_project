@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Рубеж — Мужской Трекер</title>
+    <title>Рубеж — Мужская Экосистема</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -19,21 +19,18 @@
         h1 { font-size: 24px; text-align: center; margin: 0; font-weight: 800; letter-spacing: 1px; color: var(--tg-theme-button-color, #2f8cc3); }
         .greeting { text-align: center; font-size: 13px; color: var(--tg-theme-hint-color, #708499); margin: -5px 0 10px 0; }
         
+        /* Вкладки навигации сверху (Уже 3 секции) */
         .tabs { display: flex; width: 100%; max-width: 420px; background: var(--tg-theme-secondary-bg-color, #24303f); border-radius: 10px; padding: 4px; box-sizing: border-box; margin-bottom: 10px; }
-        .tab-btn { flex: 1; padding: 10px; text-align: center; background: transparent; border: none; color: var(--tg-theme-hint-color, #708499); font-weight: bold; font-size: 14px; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
+        .tab-btn { flex: 1; padding: 10px; text-align: center; background: transparent; border: none; color: var(--tg-theme-hint-color, #708499); font-weight: bold; font-size: 13px; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
         .tab-btn.active { background: var(--tg-theme-bg-color, #17212b); color: var(--tg-theme-button-color, #2f8cc3); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
 
         .app-page { display: none; width: 100%; }
         .app-page.active { display: block; }
 
-        .slider-group {
-            display: flex; flex-direction: column; gap: 10px;
-            background: var(--tg-theme-secondary-bg-color, #24303f);
-            padding: 16px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
+        /* Стили трекера */
+        .slider-group { display: flex; flex-direction: column; gap: 10px; background: var(--tg-theme-secondary-bg-color, #24303f); padding: 16px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         .slider-label { display: flex; justify-content: space-between; font-weight: 600; font-size: 16px; }
         .slider-counter { color: var(--tg-theme-button-color, #2f8cc3); font-size: 18px; font-weight: bold; }
-        
         input[type="range"] { width: 100%; margin: 10px 0; -webkit-appearance: none; background: #4e5e70; height: 6px; border-radius: 3px; outline: none; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--tg-theme-button-color, #2f8cc3); cursor: pointer; }
         
@@ -41,16 +38,31 @@
         .btn-secondary { background-color: #4e5e70; color: #ffffff; }
         .status-msg { text-align: center; font-size: 15px; font-weight: 600; margin-top: 10px; }
 
+        /* Сетка функциональных модулей */
+        .modules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 5px; }
+        .module-card { background: var(--tg-theme-secondary-bg-color, #24303f); padding: 16px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 8px; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; }
+        .module-card:active { border-color: var(--tg-theme-button-color, #2f8cc3); background: rgba(47, 140, 195, 0.05); }
+        .mod-icon { font-size: 24px; }
+        .mod-title { font-weight: bold; font-size: 15px; color: var(--tg-theme-text-color, #f5f5f5); }
+        .mod-desc { font-size: 12px; color: var(--tg-theme-hint-color, #708499); line-height: 1.3; }
+
+        /* Секция масштабирования мероприятий */
+        .section-title { font-size: 16px; font-weight: bold; color: var(--tg-theme-hint-color, #708499); margin: 15px 0 5px 0; text-transform: uppercase; letter-spacing: 0.5px; }
+        .events-list { display: flex; flex-direction: column; gap: 10px; }
+        .event-card { background: var(--tg-theme-secondary-bg-color, #24303f); padding: 14px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #4caf50; }
+        .event-card.vip { border-left-color: #ffb300; }
+        .event-info { display: flex; flex-direction: column; gap: 3px; text-align: left; }
+        .event-name { font-weight: bold; font-size: 14px; }
+        .event-time { font-size: 12px; color: #4caf50; font-weight: 600; }
+        .event-card.vip .event-time { color: #ffb300; }
+        .event-join-btn { background: rgba(47, 140, 195, 0.15); color: var(--tg-theme-button-color, #2f8cc3); border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
+
+        /* SOS экраны и графики */
         .sos-screen { display: none; width: 100%; max-width: 420px; background: var(--tg-theme-secondary-bg-color, #24303f); padding: 24px; border-radius: 16px; box-sizing: border-box; text-align: center; }
         .sos-title { font-size: 20px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
-        .sos-desc { font-size: 14px; color: var(--tg-theme-hint-color, #708499); line-height: 1.4; margin-bottom: 20px; }
         .sos-menu { display: flex; flex-direction: column; gap: 12px; }
         .sos-option-card { background: rgba(255,255,255,0.04); padding: 14px; border-radius: 12px; text-align: left; }
-        .opt-title { font-weight: bold; font-size: 16px; }
-        .opt-desc { font-size: 13px; color: var(--tg-theme-hint-color, #708499); margin-top: 4px; }
-
         .chart-container { background: var(--tg-theme-secondary-bg-color, #24303f); padding: 16px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 10px; box-sizing: border-box; }
-        .no-data { text-align: center; padding: 40px 20px; color: var(--tg-theme-hint-color, #708499); font-style: italic; }
         .breathing-circle { width: 110px; height: 110px; border-radius: 50%; background: rgba(47, 140, 195, 0.15); border: 4px solid #2f8cc3; display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 20px auto; transition: transform 4s linear; }
         #ex-timer-display { font-size: 32px; font-weight: 800; color: #e57373; margin: 15px 0; }
     </style>
@@ -60,6 +72,7 @@
     <div class="tabs" id="app-nav-bar">
         <button class="tab-btn active" onclick="switchTab('input')">⚡ Фиксация</button>
         <button class="tab-btn" onclick="switchTab('history')">📊 Аналитика</button>
+        <button class="tab-btn" onclick="switchTab('modules')">🧱 Модули</button>
     </div>
 
     <div class="container app-page active" id="page-input">
@@ -92,9 +105,43 @@
         </div>
     </div>
 
+    <div class="container app-page" id="page-modules">
+        <h1>ЭКОСИСТЕМА РУБЕЖ</h1>
+        <p class="greeting">Инструменты прокачки и мужская среда</p>
+        
+        <div class="modules-grid">
+            <div class="module-card" onclick="alert('Модуль Курсы активируется в следующей версии')">
+                <div class="mod-icon">📚</div>
+                <div class="mod-title">Курсы и База</div>
+                <div class="mod-desc">Жесткий контент по выгоранию, стрессу и личной эффективности.</div>
+            </div>
+            
+            <div class="module-card" onclick="alert('ИИ-Брат настраивает нейросеть...')">
+                <div class="mod-icon">🤖</div>
+                <div class="mod-title">AI Брат</div>
+                <div class="mod-desc">Твой карманный ментор. Выслушает, разберет зажим, подскажет решение 24/7.</div>
+            </div>
+            
+            <div class="module-card" onclick="alert('Переход в закрытый чат...')">
+                <div class="mod-icon">🤝</div>
+                <div class="mod-title">Комьюнити</div>
+                <div class="mod-desc">Среда равных. Закрытое окружение мужчин, идущих к результату.</div>
+            </div>
+            
+            <div class="module-card" onclick="alert('Загрузка списка испытаний...')">
+                <div class="mod-icon">🎯</div>
+                <div class="mod-title">Челленджи</div>
+                <div class="mod-desc">Групповые испытания на прочность и внедрение железных привычек.</div>
+            </div>
+        </div>
+
+        <div class="section-title">Ближайшие мероприятия</div>
+        <div class="events-list" id="live-events-container">
+            </div>
+    </div>
+
     <div class="sos-screen" id="screen-sos-hub">
         <div class="sos-title" id="hub-title" style="color: #e57373;">Критический Рубеж</div>
-        <div class="sos-desc">Выбери инструмент для нормализации:</div>
         <div class="sos-menu" id="hub-options-container"></div>
         <button class="btn btn-secondary" onclick="tg.close()">Закрыть</button>
     </div>
@@ -111,6 +158,14 @@
         tg.expand(); tg.ready();
         const initData = tg.initData || "";
         let historyChartInstance = null;
+
+        // Архитектура масштабирования: Массив мероприятий. 
+        // В будущем один fetch запрос к бэкенду просто заменит этот массив данными из базы
+        const upcomingEvents = [
+            { id: 1, name: "⚡ Живой разбор: Выход из эмоциональной ямы", time: "Сегодня в 20:00", type: "regular" },
+            { id: 2, name: "👑 VIP Мастер-майнд: Стратегия личной эффективности", time: "Завтра в 18:00", type: "vip" },
+            { id: 3, name: "🎯 Групповой старт: Челлендж 'Ранний подъем'", time: "Понедельник, 07:00", type: "regular" }
+        ];
 
         const sosDatabase = {
             irritation: {
@@ -141,6 +196,25 @@
                 const response = await fetch('/api/auth/login', { method: 'POST', headers: { 'tg-data': initData } });
                 if (response.ok) { const data = await response.json(); document.getElementById('user-greeting').innerText = `Приветствуем, ${data.first_name}`; }
             } catch (e) {}
+            renderEvents(); // Запускаем сборку списка мероприятий
+        }
+
+        // Рендеринг мероприятий (Масштабируемость)
+        function renderEvents() {
+            const container = document.getElementById('live-events-container');
+            container.innerHTML = "";
+            upcomingEvents.forEach(ev => {
+                const card = document.createElement('div');
+                card.className = `event-card ${ev.type === 'vip' ? 'vip' : ''}`;
+                card.innerHTML = `
+                    <div class="event-info">
+                        <div class="event-name">${ev.name}</div>
+                        <div class="event-time">${ev.time}</div>
+                    </div>
+                    <button class="event-join-btn" onclick="alert('Заявка на участие принята!')">Иду</button>
+                `;
+                container.appendChild(card);
+            });
         }
 
         function switchTab(tab) {
@@ -153,6 +227,9 @@
                 document.querySelectorAll('.tab-btn')[1].classList.add('active');
                 document.getElementById('page-history').classList.add('active');
                 loadAndRenderChart();
+            } else if (tab === 'modules') {
+                document.querySelectorAll('.tab-btn')[2].classList.add('active');
+                document.getElementById('page-modules').classList.add('active');
             }
         }
 
@@ -176,7 +253,11 @@
                         if (irritation >= 8) { document.getElementById('app-nav-bar').style.display='none'; openSosHub('irritation'); }
                         else if (emptiness >= 8) { document.getElementById('app-nav-bar').style.display='none'; openSosHub('emptiness'); }
                         else if (energy >= 8) { document.getElementById('app-nav-bar').style.display='none'; openSosHub('energy'); }
-                        else { tg.close(); }
+                        else { 
+                            // Если всё ок, перенаправляем на вкладку модулей, чтобы вовлечь пользователя дальше!
+                            switchTab('modules');
+                            statusDiv.innerText = "";
+                        }
                     }, 800);
                 }
             } catch (e) { statusDiv.innerText = "❌ Ошибка сети"; }
@@ -185,37 +266,21 @@
         async function loadAndRenderChart() {
             const loader = document.getElementById('loading-chart');
             const canvas = document.getElementById('historyChart');
-            
             try {
                 const response = await fetch('/api/tracker/history', { method: 'GET', headers: { 'tg-data': initData } });
                 if (!response.ok) throw new Error("API Error");
-                
                 const logs = await response.json();
-                if (logs.length === 0) {
-                    loader.innerHTML = "<div class='no-data'>Здесь пока пусто. Зафиксируй состояние несколько раз, чтобы построить график.</div>";
-                    return;
-                }
+                if (logs.length === 0) { loader.innerHTML = "<div class='no-data'>Здесь пока пусто.</div>"; return; }
 
                 const chartData = logs.slice(0, 7).reverse(); 
                 const daysOfWeek = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-                
-                // ГЕНЕРАЦИЯ ДВУХСТРОЧНЫХ МЕТОК (МАССИВ СТРОК)
                 const labels = chartData.map(l => {
                     const d = new Date(l.date);
-                    const dateStr = `${d.getDate()}.${(d.getMonth()+1).toString().padStart(2,'0')}`;
-                    const dayStr = daysOfWeek[d.getDay()];
-                    return [dateStr, dayStr]; // Передаем как ['28.05', 'Чт']
+                    return [`${d.getDate()}.${(d.getMonth()+1).toString().padStart(2,'0')}`, daysOfWeek[d.getDay()]];
                 });
 
-                const datasetEnergy = chartData.map(l => l.energy);
-                const datasetIrritation = chartData.map(l => l.irritation);
-                const datasetEmptiness = chartData.map(l => l.emptiness);
-
-                loader.style.display = 'none';
-                canvas.style.display = 'block';
-
+                loader.style.display = 'none'; canvas.style.display = 'block';
                 if (historyChartInstance) { historyChartInstance.destroy(); }
-
                 const textThemeColor = getComputedStyle(document.body).getPropertyValue('--tg-theme-text-color') || '#f5f5f5';
 
                 historyChartInstance = new Chart(canvas, {
@@ -223,31 +288,20 @@
                     data: {
                         labels: labels,
                         datasets: [
-                            { label: '⚡ Энергия', data: datasetEnergy, borderColor: '#2f8cc3', backgroundColor: '#2f8cc3', tension: 0.2, borderWidth: 3 },
-                            { label: '🔥 Злость', data: datasetIrritation, borderColor: '#e57373', backgroundColor: '#e57373', tension: 0.2, borderWidth: 3 },
-                            { label: '🕳️ Пустота', data: datasetEmptiness, borderColor: '#708499', backgroundColor: '#708499', tension: 0.2, borderWidth: 3 }
+                            { label: '⚡ Энергия', data: chartData.map(l => l.energy), borderColor: '#2f8cc3', backgroundColor: '#2f8cc3', tension: 0.2, borderWidth: 3 },
+                            { label: '🔥 Злость', data: chartData.map(l => l.irritation), borderColor: '#e57373', backgroundColor: '#e57373', tension: 0.2, borderWidth: 3 },
+                            { label: '🕳️ Пустота', data: chartData.map(l => l.emptiness), borderColor: '#708499', backgroundColor: '#708499', tension: 0.2, borderWidth: 3 }
                         ]
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: { min: 1, max: 10, ticks: { color: textThemeColor }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                            x: { ticks: { color: textThemeColor, maxRotation: 0, autoSkip: false }, grid: { display: false } }
-                        },
-                        plugins: {
-                            legend: { labels: { color: textThemeColor, boxWidth: 12, font: { size: 12, weight: 'bold' } } }
-                        }
-                    }
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 1, max: 10, ticks: { color: textThemeColor }, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { ticks: { color: textThemeColor, maxRotation: 0 }, grid: { display: false } } }, plugins: { legend: { labels: { color: textThemeColor, font: { weight: 'bold' } } } } }
                 });
-
-            } catch (e) { loader.innerText = "Не удалось загрузить историю."; }
+            } catch (e) { loader.innerText = "Ошибка загрузки."; }
         }
 
-        // Логика SOS-интерфейсов (без изменений)
         function openSosHub(category) {
             document.getElementById('page-input').style.display = 'none';
             document.getElementById('page-history').style.display = 'none';
+            document.getElementById('page-modules').style.display = 'none';
             const hub = document.getElementById('screen-sos-hub');
             hub.style.display = 'block';
             const db = sosDatabase[category];
@@ -271,16 +325,16 @@
             document.getElementById('action-title').innerText = opt.title;
 
             if (opt.type === "text") {
-                box.innerHTML = opt.text; btn.innerText = "Закрыть"; btn.onclick = () => tg.close();
+                box.innerHTML = opt.text; btn.innerText = "Вернуться в хаб"; btn.onclick = () => { document.getElementById('screen-action').style.display = 'none'; document.getElementById('app-nav-bar').style.display='flex'; switchTab('modules'); };
             } else if (opt.type === "text_timer") {
                 box.innerHTML = opt.text;
-                btn.onclick = () => { btn.disabled = true; runCountdown(opt.duration, () => { box.innerHTML = "Готово. Напряжение сброшено."; btn.innerText = "Закрыть"; btn.onclick = () => tg.close(); btn.disabled = false; }); };
+                btn.onclick = () => { btn.disabled = true; runCountdown(opt.duration, () => { box.innerHTML = "Готово."; btn.innerText = "В модули"; btn.disabled = false; btn.onclick = () => { document.getElementById('screen-action').style.display = 'none'; document.getElementById('app-nav-bar').style.display='flex'; switchTab('modules'); }; }); };
             } else if (opt.type === "breath") {
                 box.innerHTML = '<div class="breathing-circle" id="b-circle">⚡</div><h3 id="b-phase">Нажми Старт</h3>';
                 btn.onclick = () => runBreathing();
             } else if (opt.type === "workout") {
-                box.innerHTML = "3 упражнения по 20 секунд: Приседания, Отжимания, Планка.";
-                btn.onclick = () => { btn.disabled = true; runCountdown(20, () => { btn.innerText = "Закрыть"; btn.onclick = () => tg.close(); btn.disabled = false; }); };
+                box.innerHTML = "Комплекс физической разрядки.";
+                btn.onclick = () => { btn.disabled = true; runCountdown(20, () => { btn.innerText = "В модули"; btn.disabled = false; btn.onclick = () => { document.getElementById('screen-action').style.display = 'none'; document.getElementById('app-nav-bar').style.display='flex'; switchTab('modules'); }; }); };
             }
         }
 
@@ -291,10 +345,11 @@
 
         function runBreathing() {
             const c = document.getElementById('b-circle'); const p = document.getElementById('b-phase');
+            const btn = document.getElementById('action-main-btn'); btn.disabled = true;
             p.innerText = "Вдох..."; c.style.transform = "scale(1.4)";
             setTimeout(() => { p.innerText = "Задержи..."; }, 4000);
             setTimeout(() => { p.innerText = "Выдох..."; c.style.transform = "scale(1.0)"; }, 8000);
-            setTimeout(() => { p.innerText = "Цикл завершен."; }, 12000);
+            setTimeout(() => { p.innerText = "Цикл завершен."; btn.innerText = "В модули"; btn.disabled = false; btn.onclick = () => { document.getElementById('screen-action').style.display = 'none'; document.getElementById('app-nav-bar').style.display='flex'; switchTab('modules'); }; }, 12000);
         }
 
         login();
