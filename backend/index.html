@@ -19,7 +19,6 @@
         h1 { font-size: 24px; text-align: center; margin: 0; font-weight: 800; letter-spacing: 1px; color: var(--tg-theme-button-color, #2f8cc3); }
         .greeting { text-align: center; font-size: 13px; color: var(--tg-theme-hint-color, #708499); margin: -5px 0 10px 0; }
         
-        /* Вкладки навигации сверху */
         .tabs { display: flex; width: 100%; max-width: 420px; background: var(--tg-theme-secondary-bg-color, #24303f); border-radius: 10px; padding: 4px; box-sizing: border-box; margin-bottom: 10px; }
         .tab-btn { flex: 1; padding: 10px; text-align: center; background: transparent; border: none; color: var(--tg-theme-hint-color, #708499); font-weight: bold; font-size: 14px; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
         .tab-btn.active { background: var(--tg-theme-bg-color, #17212b); color: var(--tg-theme-button-color, #2f8cc3); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
@@ -40,10 +39,8 @@
         
         .btn { background-color: var(--tg-theme-button-color, #2f8cc3); color: var(--tg-theme-button-text-color, #ffffff); border: none; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .btn-secondary { background-color: #4e5e70; color: #ffffff; }
-        .btn:disabled { opacity: 0.5; }
         .status-msg { text-align: center; font-size: 15px; font-weight: 600; margin-top: 10px; }
 
-        /* Экраны SOS */
         .sos-screen { display: none; width: 100%; max-width: 420px; background: var(--tg-theme-secondary-bg-color, #24303f); padding: 24px; border-radius: 16px; box-sizing: border-box; text-align: center; }
         .sos-title { font-size: 20px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
         .sos-desc { font-size: 14px; color: var(--tg-theme-hint-color, #708499); line-height: 1.4; margin-bottom: 20px; }
@@ -52,7 +49,6 @@
         .opt-title { font-weight: bold; font-size: 16px; }
         .opt-desc { font-size: 13px; color: var(--tg-theme-hint-color, #708499); margin-top: 4px; }
 
-        /* График и контейнеры */
         .chart-container { background: var(--tg-theme-secondary-bg-color, #24303f); padding: 16px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 10px; box-sizing: border-box; }
         .no-data { text-align: center; padding: 40px 20px; color: var(--tg-theme-hint-color, #708499); font-style: italic; }
         .breathing-circle { width: 110px; height: 110px; border-radius: 50%; background: rgba(47, 140, 195, 0.15); border: 4px solid #2f8cc3; display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 20px auto; transition: transform 4s linear; }
@@ -90,10 +86,9 @@
     <div class="container app-page" id="page-history">
         <h1>ДИНАМИКА СОСТОЯНИЯ</h1>
         <p class="greeting">Твои маркеры за последнее время</p>
-        
         <div class="chart-container">
             <div id="loading-chart" style="text-align:center; padding: 20px; color:var(--tg-theme-hint-color);">Загрузка графиков...</div>
-            <canvas id="historyChart" style="width: 100%; height: 230px; display: none;"></canvas>
+            <canvas id="historyChart" style="width: 100%; height: 240px; display: none;"></canvas>
         </div>
     </div>
 
@@ -148,18 +143,16 @@
             } catch (e) {}
         }
 
-        // Переключение вкладок
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
-            
             if (tab === 'input') {
                 document.querySelectorAll('.tab-btn')[0].classList.add('active');
                 document.getElementById('page-input').classList.add('active');
             } else if (tab === 'history') {
                 document.querySelectorAll('.tab-btn')[1].classList.add('active');
                 document.getElementById('page-history').classList.add('active');
-                loadAndRenderChart(); // Подгружаем график при входе во вкладку аналитики
+                loadAndRenderChart();
             }
         }
 
@@ -189,7 +182,6 @@
             } catch (e) { statusDiv.innerText = "❌ Ошибка сети"; }
         }
 
-        // Загрузка данных истории и инициализация графика Chart.js
         async function loadAndRenderChart() {
             const loader = document.getElementById('loading-chart');
             const canvas = document.getElementById('historyChart');
@@ -204,13 +196,17 @@
                     return;
                 }
 
-                // Хронологический порядок для графика (от старых к новым)
                 const chartData = logs.slice(0, 7).reverse(); 
+                const daysOfWeek = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
                 
+                // ГЕНЕРАЦИЯ ДВУХСТРОЧНЫХ МЕТОК (МАССИВ СТРОК)
                 const labels = chartData.map(l => {
                     const d = new Date(l.date);
-                    return `${d.getDate()}.${(d.getMonth()+1).toString().padStart(2,'0')}`;
+                    const dateStr = `${d.getDate()}.${(d.getMonth()+1).toString().padStart(2,'0')}`;
+                    const dayStr = daysOfWeek[d.getDay()];
+                    return [dateStr, dayStr]; // Передаем как ['28.05', 'Чт']
                 });
+
                 const datasetEnergy = chartData.map(l => l.energy);
                 const datasetIrritation = chartData.map(l => l.irritation);
                 const datasetEmptiness = chartData.map(l => l.emptiness);
@@ -220,7 +216,6 @@
 
                 if (historyChartInstance) { historyChartInstance.destroy(); }
 
-                // Цвета под тему Telegram
                 const textThemeColor = getComputedStyle(document.body).getPropertyValue('--tg-theme-text-color') || '#f5f5f5';
 
                 historyChartInstance = new Chart(canvas, {
@@ -238,7 +233,7 @@
                         maintainAspectRatio: false,
                         scales: {
                             y: { min: 1, max: 10, ticks: { color: textThemeColor }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                            x: { ticks: { color: textThemeColor }, grid: { display: false } }
+                            x: { ticks: { color: textThemeColor, maxRotation: 0, autoSkip: false }, grid: { display: false } }
                         },
                         plugins: {
                             legend: { labels: { color: textThemeColor, boxWidth: 12, font: { size: 12, weight: 'bold' } } }
@@ -246,9 +241,7 @@
                     }
                 });
 
-            } catch (e) {
-                loader.innerText = "Не удалось загрузить историю.";
-            }
+            } catch (e) { loader.innerText = "Не удалось загрузить историю."; }
         }
 
         // Логика SOS-интерфейсов (без изменений)
@@ -264,7 +257,7 @@
             db.options.forEach(opt => {
                 const card = document.createElement('div');
                 card.className = "sos-option-card";
-                card.innerHTML = `<div class="opt-title">${opt.icon} ${opt.title}</div><div class="opt-desc">${opt.desc || ""}</div>`;
+                card.innerHTML = `<div class="opt-title">${opt.icon} ${opt.title}</div>`;
                 card.onclick = () => { launchAction(opt); };
                 container.appendChild(card);
             });
