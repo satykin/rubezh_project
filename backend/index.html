@@ -44,7 +44,8 @@
         input[type="range"] { width: 100%; margin: 10px 0; -webkit-appearance: none; background: #4e5e70; height: 6px; border-radius: 3px; outline: none; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; }
         
-        .btn { background-color: var(--tg-theme-button-color, #2f8cc3); color: var(--tg-theme-button-text-color, #ffffff); border: none; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .btn { background-color: var(--tg-theme-button-color, #2f8cc3); color: var(--tg-theme-button-text-color, #ffffff); border: none; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: all 0.2s; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-secondary { background-color: #4e5e70; color: #ffffff; }
         .status-msg { text-align: center; font-size: 15px; font-weight: 600; margin-top: 10px; }
 
@@ -104,10 +105,13 @@
         /* Графики и SOS */
         .chart-container { background: var(--tg-theme-secondary-bg-color, #24303f); padding: 16px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 10px; box-sizing: border-box; }
         .no-data { text-align: center; padding: 40px 20px; color: var(--tg-theme-hint-color, #708499); font-style: italic; }
+        
         .sos-screen { display: none; width: 100%; max-width: 420px; background: var(--tg-theme-secondary-bg-color, #24303f); padding: 24px; border-radius: 16px; box-sizing: border-box; text-align: center; }
+        .sos-screen.active { display: block; }
+        
         .sos-title { font-size: 20px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
         .sos-menu { display: flex; flex-direction: column; gap: 12px; }
-        .sos-option-card { background: rgba(255,255,255,0.04); padding: 14px; border-radius: 12px; text-align: left; }
+        .sos-option-card { background: rgba(255,255,255,0.04); padding: 14px; border-radius: 12px; text-align: left; cursor: pointer; }
         .breathing-circle { width: 110px; height: 110px; border-radius: 50%; background: rgba(47, 140, 195, 0.15); border: 4px solid #2f8cc3; display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 20px auto; transition: transform 4s linear; }
         #ex-timer-display { font-size: 32px; font-weight: 800; color: #e57373; margin: 15px 0; }
     </style>
@@ -164,7 +168,9 @@
         <p class="greeting">Твои маркеры за последнее время</p>
         <div class="chart-container">
             <div id="loading-chart" style="text-align:center; padding: 20px; color:var(--tg-theme-hint-color);">Загрузка графиков...</div>
-            <canvas id="historyChart" style="width: 100%; height: 240px; display: none;"></canvas>
+            <div style="position: relative; height: 240px; width: 100%;">
+                <canvas id="historyChart" style="display: none;"></canvas>
+            </div>
         </div>
     </div>
 
@@ -215,7 +221,7 @@
         <p class="greeting">Изучи и внедряй</p>
         <div class="lesson-content" id="lesson-body">
             </div>
-        <button class="btn" onclick="document.getElementById('page-course-lesson').classList.remove('active'); document.getElementById('page-courses-list').classList.add('active');">Прочитано. Внедряю</button>
+        <button class="btn" onclick="openCoursesHub()">Прочитано. Внедряю</button>
     </div>
 
     <div class="container app-page" id="page-ai-brother">
@@ -246,6 +252,7 @@
         <div class="sos-menu" id="hub-options-container"></div>
         <button class="btn btn-secondary" onclick="tg.close()">Закрыть</button>
     </div>
+    
     <div class="sos-screen" id="screen-action">
         <div class="sos-title" id="action-title" style="color: #2f8cc3;">Практика</div>
         <div id="box-content" style="margin: 20px 0;"></div>
@@ -257,11 +264,29 @@
         const tg = window.Telegram.WebApp;
         tg.expand(); tg.ready();
         const initData = tg.initData || "";
+        
         let historyChartInstance = null;
         let recognition = null; 
         let isRecording = false;
 
-        // БАЗА ЗНАНИЙ (Разделена на категории)
+        let activeInterval = null;
+        let activeTimeouts = [];
+
+        function clearActiveTimers() {
+            if (activeInterval) {
+                clearInterval(activeInterval);
+                activeInterval = null;
+            }
+            activeTimeouts.forEach(t => clearTimeout(t));
+            activeTimeouts = [];
+            
+            const display = document.getElementById('ex-timer-display');
+            if (display) display.style.display = 'none';
+            const actionBtn = document.getElementById('action-main-btn');
+            if (actionBtn) actionBtn.disabled = false;
+        }
+
+        // БАЗА ЗНАНИЙ
         const coursesDb = [
             {
                 id: "c_main_1", category: "course", title: "Как не сгореть к 40: День 1", desc: "Что такое мужское выгорание на самом деле. Честный разбор признаков и первое задание.", progress: "Новое", locked: false,
@@ -336,12 +361,20 @@
         };
 
         async function login() {
-            if (!initData) { document.getElementById('user-greeting').innerText = "Режим симуляции"; return; }
-            try {
-                const response = await fetch('/api/auth/login', { method: 'POST', headers: { 'tg-data': initData } });
-                if (response.ok) { const data = await response.json(); document.getElementById('user-greeting').innerText = `Приветствуем, ${data.first_name}`; }
-            } catch (e) {}
-            renderEvents();
+            if (!initData) { 
+                document.getElementById('user-greeting').innerText = "Режим симуляции"; 
+            } else {
+                try {
+                    const response = await fetch('/api/auth/login', { method: 'POST', headers: { 'tg-data': initData } });
+                    if (response.ok) { 
+                        const data = await response.json(); 
+                        document.getElementById('user-greeting').innerText = `Приветствуем, ${data.first_name}`; 
+                    }
+                } catch (e) {
+                    console.error("Login failed", e);
+                }
+            }
+            renderEvents(); 
         }
 
         function renderEvents() {
@@ -355,11 +388,17 @@
             });
         }
 
-        // ЛОГИКА ВКЛАДОК
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        function resetAllScreens() {
+            clearActiveTimers();
             document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.sos-screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        }
+
+        function switchTab(tab) {
+            resetAllScreens();
             document.getElementById('app-nav-bar').style.display = 'flex';
+            
             if (tab === 'input') {
                 document.querySelectorAll('.tab-btn')[0].classList.add('active');
                 document.getElementById('page-input').classList.add('active');
@@ -373,12 +412,89 @@
             }
         }
 
-        // ЛОГИКА КУРСОВ И БАЗЫ (С РАЗДЕЛЕНИЕМ КАТЕГОРИЙ)
         function openCoursesHub() {
-            document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
+            resetAllScreens();
             document.getElementById('app-nav-bar').style.display = 'none';
             document.getElementById('page-courses-list').classList.add('active');
             renderCourses();
+        }
+
+        function openLesson(courseData) {
+            resetAllScreens();
+            document.getElementById('app-nav-bar').style.display = 'none';
+            document.getElementById('page-course-lesson').classList.add('active');
+            document.getElementById('lesson-header').innerText = courseData.title;
+            document.getElementById('lesson-body').innerHTML = courseData.content;
+        }
+
+        function openAiBrotherChat() {
+            resetAllScreens();
+            document.getElementById('app-nav-bar').style.display = 'none';
+            document.getElementById('page-ai-brother').classList.add('active');
+        }
+
+        function openSosHub(category) {
+            resetAllScreens();
+            document.getElementById('app-nav-bar').style.display = 'none';
+            
+            const hub = document.getElementById('screen-sos-hub'); 
+            hub.classList.add('active');
+            
+            const db = sosDatabase[category]; 
+            document.getElementById('hub-title').innerText = db.title;
+            const container = document.getElementById('hub-options-container'); 
+            container.innerHTML = "";
+            
+            db.options.forEach(opt => {
+                const card = document.createElement('div'); 
+                card.className = "sos-option-card"; 
+                card.innerHTML = `<div class="opt-title">${opt.title}</div>`;
+                card.onclick = () => { launchAction(opt); }; 
+                container.appendChild(card);
+            });
+        }
+
+        function launchAction(opt) {
+            resetAllScreens();
+            document.getElementById('app-nav-bar').style.display = 'none';
+            document.getElementById('screen-action').classList.add('active');
+            
+            const box = document.getElementById('box-content'); 
+            const btn = document.getElementById('action-main-btn'); 
+            document.getElementById('action-title').innerText = opt.title;
+
+            if (opt.type === "text") {
+                box.innerHTML = opt.text; 
+                btn.innerText = "В модули"; 
+                btn.onclick = () => switchTab('modules');
+            } else if (opt.type === "text_timer") {
+                box.innerHTML = opt.text;
+                btn.innerText = "Начать";
+                btn.onclick = () => { 
+                    btn.disabled = true; 
+                    runCountdown(opt.duration, () => { 
+                        box.innerHTML = "Готово."; 
+                        btn.innerText = "В модули"; 
+                        btn.disabled = false; 
+                        btn.onclick = () => switchTab('modules'); 
+                    }); 
+                };
+            } else if (opt.type === "breath") {
+                box.innerHTML = '<div class="breathing-circle" id="b-circle">⚡</div><h3 id="b-phase">Нажми Старт</h3>';
+                btn.innerText = "Начать";
+                btn.onclick = () => runBreathing();
+            } else if (opt.type === "workout") {
+                box.innerHTML = "Комплекс физической разрядки.";
+                btn.innerText = "Начать";
+                btn.onclick = () => { 
+                    btn.disabled = true; 
+                    runCountdown(20, () => { 
+                        btn.innerText = "В модули"; 
+                        btn.disabled = false; 
+                        btn.onclick = () => switchTab('modules'); 
+                    }); 
+                };
+            }
         }
 
         function renderCourses() {
@@ -413,20 +529,6 @@
                     protocolsContainer.appendChild(card);
                 }
             });
-        }
-
-        function openLesson(courseData) {
-            document.getElementById('page-courses-list').classList.remove('active');
-            document.getElementById('page-course-lesson').classList.add('active');
-            document.getElementById('lesson-header').innerText = courseData.title;
-            document.getElementById('lesson-body').innerHTML = courseData.content;
-        }
-
-        // ЛОГИКА ИИ-БРАТА С ГОЛОСОМ
-        function openAiBrotherChat() {
-            document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
-            document.getElementById('app-nav-bar').style.display = 'none';
-            document.getElementById('page-ai-brother').classList.add('active');
         }
 
         function closeAiBrotherChat() {
@@ -491,25 +593,34 @@
             box.scrollTop = box.scrollHeight;
         }
 
-        // ЛОГИКА ТРЕКЕРА И ГРАФИКОВ
         async function sendData() {
             const energy = parseInt(document.getElementById('energy').value);
             const irritation = parseInt(document.getElementById('irritation').value);
             const emptiness = parseInt(document.getElementById('emptiness').value);
             const statusDiv = document.getElementById('status');
+            const submitBtn = document.getElementById('submit-btn');
+            
             statusDiv.innerText = "Сохранение...";
+            submitBtn.disabled = true;
+
             try {
                 const response = await fetch('/api/tracker/log', { method: 'POST', headers: { 'Content-Type': 'application/json', 'tg-data': initData }, body: JSON.stringify({ energy, irritation, emptiness }) });
                 if (response.ok) {
                     statusDiv.innerText = "✊ Лог зафиксирован!";
                     setTimeout(() => {
-                        if (irritation >= 8) { document.getElementById('app-nav-bar').style.display='none'; openSosHub('irritation'); }
-                        else if (emptiness >= 8) { document.getElementById('app-nav-bar').style.display='none'; openSosHub('emptiness'); }
-                        else if (energy >= 8) { document.getElementById('app-nav-bar').style.display='none'; openSosHub('energy'); }
+                        if (irritation >= 8) { openSosHub('irritation'); }
+                        else if (emptiness >= 8) { openSosHub('emptiness'); }
+                        else if (energy >= 8) { openSosHub('energy'); }
                         else { switchTab('modules'); statusDiv.innerText = ""; }
                     }, 800);
+                } else {
+                    statusDiv.innerText = "❌ Ошибка сервера";
                 }
-            } catch (e) { statusDiv.innerText = "❌ Ошибка сети"; }
+            } catch (e) { 
+                statusDiv.innerText = "❌ Ошибка сети"; 
+            } finally {
+                submitBtn.disabled = false;
+            }
         }
 
         async function loadAndRenderChart() {
@@ -540,47 +651,41 @@
             } catch (e) { loader.innerText = "Ошибка загрузки."; }
         }
 
-        // ЛОГИКА SOS
-        function openSosHub(category) {
-            document.getElementById('page-input').style.display = 'none'; document.getElementById('page-history').style.display = 'none'; document.getElementById('page-modules').style.display = 'none';
-            const hub = document.getElementById('screen-sos-hub'); hub.style.display = 'block';
-            const db = sosDatabase[category]; document.getElementById('hub-title').innerText = db.title;
-            const container = document.getElementById('hub-options-container'); container.innerHTML = "";
-            db.options.forEach(opt => {
-                const card = document.createElement('div'); card.className = "sos-option-card"; card.innerHTML = `<div class="opt-title">${opt.title}</div>`;
-                card.onclick = () => { launchAction(opt); }; container.appendChild(card);
-            });
-        }
-
-        function launchAction(opt) {
-            document.getElementById('screen-sos-hub').style.display = 'none'; document.getElementById('screen-action').style.display = 'block';
-            const box = document.getElementById('box-content'); const btn = document.getElementById('action-main-btn'); document.getElementById('action-title').innerText = opt.title;
-
-            if (opt.type === "text") {
-                box.innerHTML = opt.text; btn.innerText = "В модули"; btn.onclick = () => { document.getElementById('screen-action').style.display = 'none'; document.getElementById('app-nav-bar').style.display='flex'; switchTab('modules'); };
-            } else if (opt.type === "text_timer") {
-                box.innerHTML = opt.text;
-                btn.onclick = () => { btn.disabled = true; runCountdown(opt.duration, () => { box.innerHTML = "Готово."; btn.innerText = "В модули"; btn.disabled = false; btn.onclick = () => { document.getElementById('screen-action').style.display = 'none'; document.getElementById('app-nav-bar').style.display='flex'; switchTab('modules'); }; }); };
-            } else if (opt.type === "breath") {
-                box.innerHTML = '<div class="breathing-circle" id="b-circle">⚡</div><h3 id="b-phase">Нажми Старт</h3>';
-                btn.onclick = () => runBreathing();
-            } else if (opt.type === "workout") {
-                box.innerHTML = "Комплекс физической разрядки.";
-                btn.onclick = () => { btn.disabled = true; runCountdown(20, () => { btn.innerText = "В модули"; btn.disabled = false; btn.onclick = () => { document.getElementById('screen-action').style.display = 'none'; document.getElementById('app-nav-bar').style.display='flex'; switchTab('modules'); }; }); };
-            }
-        }
-
         function runCountdown(sec, cb) {
-            const d = document.getElementById('ex-timer-display'); d.style.display = 'block'; d.innerText = sec;
-            const i = setInterval(() => { sec--; d.innerText = sec; if(sec<=0) {clearInterval(i); d.style.display='none'; cb();} }, 1000);
+            clearActiveTimers();
+            const d = document.getElementById('ex-timer-display'); 
+            d.style.display = 'block'; 
+            d.innerText = sec;
+            
+            activeInterval = setInterval(() => { 
+                sec--; 
+                d.innerText = sec; 
+                if(sec <= 0) {
+                    clearInterval(activeInterval); 
+                    activeInterval = null;
+                    d.style.display = 'none'; 
+                    cb();
+                } 
+            }, 1000);
         }
 
         function runBreathing() {
-            const c = document.getElementById('b-circle'); const p = document.getElementById('b-phase'); const btn = document.getElementById('action-main-btn'); btn.disabled = true;
+            clearActiveTimers();
+            const c = document.getElementById('b-circle'); 
+            const p = document.getElementById('b-phase'); 
+            const btn = document.getElementById('action-main-btn'); 
+            
+            btn.disabled = true;
             p.innerText = "Вдох..."; c.style.transform = "scale(1.4)";
-            setTimeout(() => { p.innerText = "Задержи..."; }, 4000);
-            setTimeout(() => { p.innerText = "Выдох..."; c.style.transform = "scale(1.0)"; }, 8000);
-            setTimeout(() => { p.innerText = "Цикл завершен."; btn.innerText = "В модули"; btn.disabled = false; btn.onclick = () => { document.getElementById('screen-action').style.display = 'none'; document.getElementById('app-nav-bar').style.display='flex'; switchTab('modules'); }; }, 12000);
+            
+            activeTimeouts.push(setTimeout(() => { p.innerText = "Задержи..."; }, 4000));
+            activeTimeouts.push(setTimeout(() => { p.innerText = "Выдох..."; c.style.transform = "scale(1.0)"; }, 8000));
+            activeTimeouts.push(setTimeout(() => { 
+                p.innerText = "Цикл завершен."; 
+                btn.innerText = "В модули"; 
+                btn.disabled = false; 
+                btn.onclick = () => switchTab('modules'); 
+            }, 12000));
         }
 
         login();
