@@ -5,7 +5,7 @@ import hashlib
 import json
 import uvicorn
 import httpx
-from datetime import datetime
+from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 from urllib.parse import parse_qsl
 from fastapi import FastAPI, Header, HTTPException, Depends
@@ -46,11 +46,15 @@ AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_co
 class Base(DeclarativeBase):
     pass
 
+# Хелпер для замены устаревшего datetime.utcnow()
+def get_utc_now():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
 class User(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
     telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=get_utc_now)
 
 class TrackerLog(Base):
     __tablename__ = "tracker_logs"
@@ -59,7 +63,7 @@ class TrackerLog(Base):
     energy: Mapped[int] = mapped_column()
     irritation: Mapped[int] = mapped_column()
     emptiness: Mapped[int] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=get_utc_now)
 
 class TrackerInput(BaseModel):
     energy: int = Field(..., ge=1, le=10)
@@ -80,33 +84,46 @@ async def get_db():
             await session.rollback()
             raise
 
-def verify_telegram_data(init_data: str) -> dict:
+def get_tg_user(tg_data: str = Header(...)) -> dict:
     if not BOT_TOKEN:
         raise HTTPException(status_code=500, detail="Telegram Bot Token is not configured")
     try:
-        params = dict(parse_qsl(init_data))
+        params = dict(parse_qsl(tg_data))
         if "hash" not in params:
             raise HTTPException(status_code=401, detail="Missing hash")
+        
         hash_value = params.pop("hash")
         data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(params.items()))
         secret_key = hmac.new(b"WebAppData", BOT_TOKEN.encode(), hashlib.sha256).digest()
         calculated_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
-        if calculated_hash != hash_value:
+        
+        # ЗАЩИТА ОТ TIMING ATTACK
+        if not hmac.compare_digest(calculated_hash, hash_value):
             raise HTTPException(status_code=401, detail="Verification failed")
+            
+        if "user" not in params:
+            print("AUTH ERROR: 'user' key is missing from verified Telegram payload.")
+            raise HTTPException(status_code=400, detail="Missing user payload")
+            
         return json.loads(params["user"])
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid session data")
+        
+    except HTTPException:
+        raise
+    except json.JSONDecodeError as e:
+        print(f"AUTH ERROR: Failed to parse user JSON. Details: {e}")
+        raise HTTPException(status_code=400, detail="Invalid user JSON format")
+    except Exception as e:
+        print(f"CRITICAL AUTH ERROR: Unexpected failure during Telegram validation: {e}")
+        raise HTTPException(status_code=401, detail=f"Session validation error: {str(e)}")
 
-async def get_current_user(tg_data: str = Header(...), db: AsyncSession = Depends(get_db)) -> User:
-    tg_user = verify_telegram_data(tg_data)
-    result = await db.execute(select(User).where(User.telegram_id == tg_user["id"]))
+async def fetch_current_user(db: AsyncSession, tg_id: int) -> User:
+    result = await db.execute(select(User).where(User.telegram_id == tg_id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not registered")
     return user
 
 async def call_ai_api(base_url: str, api_key: str, model: str, system_prompt: str, user_message: str) -> str:
-    # Заголовки, необходимые для обхода ошибки 400 на бесплатных моделях OpenRouter
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
@@ -124,7 +141,6 @@ async def call_ai_api(base_url: str, api_key: str, model: str, system_prompt: st
     async with httpx.AsyncClient() as client:
         response = await client.post(f"{base_url}/chat/completions", headers=headers, json=data, timeout=15.0)
         
-        # Вытаскиваем точную причину ошибки из ответа OpenRouter для логов
         if response.status_code != 200:
             error_details = response.text
             raise Exception(f"Provider status code: {response.status_code}. Details: {error_details}")
@@ -158,12 +174,12 @@ async def read_root():
         return "<h3>Frontend file 'index.html' not found.</h3>"
 
 @app.post("/api/auth/login")
-async def login_or_register(tg_data: str = Header(...), db: AsyncSession = Depends(get_db)):
-    tg_user = verify_telegram_data(tg_data)
-    result = await db.execute(select(User).where(User.telegram_id == tg_user["id"]))
+async def login_or_register(tg_user: dict = Depends(get_tg_user), db: AsyncSession = Depends(get_db)):
+    tg_id = tg_user["id"]
+    result = await db.execute(select(User).where(User.telegram_id == tg_id))
     user = result.scalar_one_or_none()
     if not user:
-        user = User(telegram_id=tg_user["id"])
+        user = User(telegram_id=tg_id)
         db.add(user)
         await db.flush()
         status = "registered"
@@ -172,22 +188,25 @@ async def login_or_register(tg_data: str = Header(...), db: AsyncSession = Depen
     return {"status": status, "user_id": user.id, "first_name": tg_user.get("first_name", "User")}
 
 @app.post("/api/tracker/log")
-async def save_tracker_log(payload: TrackerInput, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def save_tracker_log(payload: TrackerInput, tg_user: dict = Depends(get_tg_user), db: AsyncSession = Depends(get_db)):
+    current_user = await fetch_current_user(db, tg_user["id"])
     new_log = TrackerLog(user_id=current_user.id, energy=payload.energy, irritation=payload.irritation, emptiness=payload.emptiness)
     db.add(new_log)
     return {"status": "success"}
 
 @app.get("/api/tracker/history")
-async def get_tracker_history(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def get_tracker_history(tg_user: dict = Depends(get_tg_user), db: AsyncSession = Depends(get_db)):
+    current_user = await fetch_current_user(db, tg_user["id"])
     result = await db.execute(select(TrackerLog).where(TrackerLog.user_id == current_user.id).order_by(TrackerLog.created_at.desc()))
     logs = result.scalars().all()
     return [{"id": log.id, "energy": log.energy, "irritation": log.irritation, "emptiness": log.emptiness, "date": log.created_at.isoformat()} for log in logs]
 
 @app.post("/api/ai/chat")
-async def ai_brother_chat(payload: ChatInput, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def ai_brother_chat(payload: ChatInput, tg_user: dict = Depends(get_tg_user), db: AsyncSession = Depends(get_db)):
     user_text = payload.message.lower().strip()
+    current_user = await fetch_current_user(db, tg_user["id"])
 
-    # 1. МОДЕРАЦИЯ КРИТИЧЕСКИХ ЗАПРОСОВ (Перенаправление)
+    # 1. МОДЕРАЦИЯ КРИТИЧЕСКИХ ЗАПРОСОВ
     critical_keywords = [
         "суицид", "убить себя", "покончить с собой", "повесить", "вскрыть вены", 
         "спрыгнуть", "умереть", "таблетки", "наглотаться", "смерть", "резать", 
@@ -215,7 +234,7 @@ async def ai_brother_chat(payload: ChatInput, current_user: User = Depends(get_c
     if last_log:
         context_string = f"Энергия: {last_log.energy}/10, Раздражение: {last_log.irritation}/10, Пустота: {last_log.emptiness}/10."
 
-    # 3. СИСТЕМНЫЙ ПРОМПТ (МАТ + ЗАПРЕТ ДИАГНОЗОВ)
+    # 3. СИСТЕМНЫЙ ПРОМПТ
     system_prompt = (
         "Ты — ИИ Брат, цифровой ментор для мужчин, переживающих жесткий кризис, выгорание и стресс. "
         "Твой стиль: спартанский, прагматичный, поддерживающий, но строгий. Говори коротко, емко, по делу.\n\n"
@@ -230,7 +249,6 @@ async def ai_brother_chat(payload: ChatInput, current_user: User = Depends(get_c
     )
 
     # 4. FAILOVER КАСКАД
-    # Попытка 1: OpenRouter
     if AI_QWEN_KEY:
         try:
             reply = await call_ai_api(AI_QWEN_URL, AI_QWEN_KEY, AI_QWEN_MODEL, system_prompt, payload.message)
@@ -238,7 +256,6 @@ async def ai_brother_chat(payload: ChatInput, current_user: User = Depends(get_c
         except Exception as e:
             print(f"ERROR: OpenRouter failed: {e}. Switching to DeepSeek...")
 
-    # Попытка 2: DeepSeek
     if AI_DEEPSEEK_KEY:
         try:
             reply = await call_ai_api(AI_DEEPSEEK_URL, AI_DEEPSEEK_KEY, AI_DEEPSEEK_MODEL, system_prompt, payload.message)
