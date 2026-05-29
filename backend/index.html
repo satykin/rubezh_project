@@ -175,7 +175,7 @@
     </div>
 
     <div class="container app-page" id="page-modules">
-        <h1>ЭКОСИСТЕМА РУБЕЖ</h1>
+        <h1>ЭКОСИСТЕМА МУЖИКА</h1>
         <p class="greeting">Инструменты прокачки и мужская среда</p>
         <div class="modules-grid">
             <div class="module-card" onclick="openCoursesHub()">
@@ -203,17 +203,38 @@
         <div class="events-list" id="live-events-container"></div>
     </div>
 
-    <div class="container app-page" id="page-courses-list">
+    <div class="container app-page" id="page-courses-hub">
         <h1>БАЗА ЗНАНИЙ</h1>
-        <p class="greeting">Тактические протоколы и инструкции</p>
+        <p class="greeting">Выбери направление</p>
         
-        <div class="section-title" style="margin-top: 10px;">Курсы</div>
-        <div id="courses-only-container"></div>
-        
-        <div class="section-title" style="margin-top: 20px;">Базовые протоколы</div>
-        <div id="protocols-container"></div>
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+            <div class="module-card" onclick="openCategory('course')" style="border-left: 4px solid #2f8cc3; flex-direction: row; align-items: center; padding: 20px 16px;">
+                <div class="mod-icon" style="margin-bottom: 0; margin-right: 15px;"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg></div>
+                <div>
+                    <div class="mod-title" style="font-size: 18px; margin-bottom: 4px;">Курсы</div>
+                    <div class="mod-desc">Глубокие погружения и пошаговые программы.</div>
+                </div>
+            </div>
+            
+            <div class="module-card" onclick="openCategory('protocol')" style="border-left: 4px solid #e57373; flex-direction: row; align-items: center; padding: 20px 16px;">
+                <div class="mod-icon" style="margin-bottom: 0; margin-right: 15px;"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
+                <div>
+                    <div class="mod-title" style="font-size: 18px; margin-bottom: 4px;">Базовые протоколы</div>
+                    <div class="mod-desc">Тактические инструкции для экстренных ситуаций.</div>
+                </div>
+            </div>
+        </div>
 
         <button class="btn btn-secondary" style="margin-top: 20px;" onclick="switchTab('modules')">Назад в меню</button>
+    </div>
+
+    <div class="container app-page" id="page-courses-list">
+        <h1 id="category-title">БАЗА ЗНАНИЙ</h1>
+        <p class="greeting" id="category-desc">Тактические протоколы и инструкции</p>
+        
+        <div id="category-container" style="margin-top: 10px;"></div>
+
+        <button class="btn btn-secondary" style="margin-top: 20px;" onclick="openCoursesHub()">Назад к разделам</button>
     </div>
 
     <div class="container app-page" id="page-course-lesson">
@@ -221,7 +242,7 @@
         <p class="greeting">Изучи и внедряй</p>
         <div class="lesson-content" id="lesson-body">
             </div>
-        <button class="btn" onclick="openCoursesHub()">Прочитано. Внедряю</button>
+        <button class="btn" onclick="openCategory(currentCategoryContext)">Прочитано. Внедряю</button>
     </div>
 
     <div class="container app-page" id="page-ai-brother">
@@ -250,7 +271,7 @@
     <div class="sos-screen" id="screen-sos-hub">
         <div class="sos-title" id="hub-title" style="color: #e57373;">Критический Рубеж</div>
         <div class="sos-menu" id="hub-options-container"></div>
-        <button class="btn btn-secondary" onclick="tg.close()">Закрыть</button>
+        <button class="btn btn-secondary" style="margin-top: 15px;" onclick="switchTab('history')">В аналитику</button>
     </div>
     
     <div class="sos-screen" id="screen-action">
@@ -271,6 +292,7 @@
 
         let activeInterval = null;
         let activeTimeouts = [];
+        let currentCategoryContext = 'course'; // Запоминаем, в какой папке мы находимся
 
         function clearActiveTimers() {
             if (activeInterval) {
@@ -412,11 +434,54 @@
             }
         }
 
+        // ЛОГИКА МАРШРУТИЗАЦИИ БАЗЫ ЗНАНИЙ
         function openCoursesHub() {
             resetAllScreens();
             document.getElementById('app-nav-bar').style.display = 'none';
+            document.getElementById('page-courses-hub').classList.add('active');
+        }
+
+        function openCategory(categoryType) {
+            currentCategoryContext = categoryType; // Запоминаем текущий раздел
+            resetAllScreens();
+            document.getElementById('app-nav-bar').style.display = 'none';
             document.getElementById('page-courses-list').classList.add('active');
-            renderCourses();
+            
+            // Настраиваем заголовки
+            if (categoryType === 'course') {
+                document.getElementById('category-title').innerText = "КУРСЫ";
+                document.getElementById('category-desc').innerText = "Пошаговые программы погружения";
+            } else {
+                document.getElementById('category-title').innerText = "ПРОТОКОЛЫ";
+                document.getElementById('category-desc').innerText = "Тактические инструкции быстрого действия";
+            }
+
+            const container = document.getElementById('category-container');
+            container.innerHTML = "";
+            
+            // Рендерим только выбранную категорию
+            coursesDb.filter(c => c.category === categoryType).forEach(c => {
+                const card = document.createElement('div');
+                card.className = `course-card ${c.locked ? 'locked' : ''}`;
+                card.innerHTML = `
+                    <div class="course-header">
+                        <div class="course-title">${c.title}</div>
+                        <div class="course-icon">
+                            ${c.locked ? '<svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>' : '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>'}
+                        </div>
+                    </div>
+                    <div class="course-desc">${c.desc}</div>
+                    <div class="course-progress">${c.progress}</div>
+                `;
+                
+                if (!c.locked) {
+                    card.onclick = () => openLesson(c);
+                } else {
+                    card.onclick = () => alert("Этот модуль пока закрыт. Требуется повышение ранга.");
+                }
+                
+                container.appendChild(card);
+            });
         }
 
         function openLesson(courseData) {
@@ -426,6 +491,8 @@
             document.getElementById('lesson-header').innerText = courseData.title;
             document.getElementById('lesson-body').innerHTML = courseData.content;
         }
+
+        // ===========================================
 
         function openAiBrotherChat() {
             resetAllScreens();
@@ -465,8 +532,8 @@
 
             if (opt.type === "text") {
                 box.innerHTML = opt.text; 
-                btn.innerText = "В модули"; 
-                btn.onclick = () => switchTab('modules');
+                btn.innerText = "В аналитику"; 
+                btn.onclick = () => switchTab('history');
             } else if (opt.type === "text_timer") {
                 box.innerHTML = opt.text;
                 btn.innerText = "Начать";
@@ -474,9 +541,9 @@
                     btn.disabled = true; 
                     runCountdown(opt.duration, () => { 
                         box.innerHTML = "Готово."; 
-                        btn.innerText = "В модули"; 
+                        btn.innerText = "В аналитику"; 
                         btn.disabled = false; 
-                        btn.onclick = () => switchTab('modules'); 
+                        btn.onclick = () => switchTab('history'); 
                     }); 
                 };
             } else if (opt.type === "breath") {
@@ -489,46 +556,12 @@
                 btn.onclick = () => { 
                     btn.disabled = true; 
                     runCountdown(20, () => { 
-                        btn.innerText = "В модули"; 
+                        btn.innerText = "В аналитику"; 
                         btn.disabled = false; 
-                        btn.onclick = () => switchTab('modules'); 
+                        btn.onclick = () => switchTab('history'); 
                     }); 
                 };
             }
-        }
-
-        function renderCourses() {
-            const coursesContainer = document.getElementById('courses-only-container');
-            const protocolsContainer = document.getElementById('protocols-container');
-            coursesContainer.innerHTML = "";
-            protocolsContainer.innerHTML = "";
-            
-            coursesDb.forEach(c => {
-                const card = document.createElement('div');
-                card.className = `course-card ${c.locked ? 'locked' : ''}`;
-                card.innerHTML = `
-                    <div class="course-header">
-                        <div class="course-title">${c.title}</div>
-                        <div class="course-icon">
-                            ${c.locked ? '<svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>' : '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>'}
-                        </div>
-                    </div>
-                    <div class="course-desc">${c.desc}</div>
-                    <div class="course-progress">${c.progress}</div>
-                `;
-                
-                if (!c.locked) {
-                    card.onclick = () => openLesson(c);
-                } else {
-                    card.onclick = () => alert("Этот модуль пока закрыт. Требуется повышение ранга.");
-                }
-                
-                if (c.category === "course") {
-                    coursesContainer.appendChild(card);
-                } else {
-                    protocolsContainer.appendChild(card);
-                }
-            });
         }
 
         function closeAiBrotherChat() {
@@ -611,7 +644,7 @@
                         if (irritation >= 8) { openSosHub('irritation'); }
                         else if (emptiness >= 8) { openSosHub('emptiness'); }
                         else if (energy >= 8) { openSosHub('energy'); }
-                        else { switchTab('modules'); statusDiv.innerText = ""; }
+                        else { switchTab('history'); statusDiv.innerText = ""; } 
                     }, 800);
                 } else {
                     statusDiv.innerText = "❌ Ошибка сервера";
@@ -682,9 +715,9 @@
             activeTimeouts.push(setTimeout(() => { p.innerText = "Выдох..."; c.style.transform = "scale(1.0)"; }, 8000));
             activeTimeouts.push(setTimeout(() => { 
                 p.innerText = "Цикл завершен."; 
-                btn.innerText = "В модули"; 
+                btn.innerText = "В аналитику"; 
                 btn.disabled = false; 
-                btn.onclick = () => switchTab('modules'); 
+                btn.onclick = () => switchTab('history'); 
             }, 12000));
         }
 
