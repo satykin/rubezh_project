@@ -26,7 +26,6 @@
         .app-page { display: none; width: 100%; }
         .app-page.active { display: block; }
 
-        /* Трекер */
         .slider-group { display: flex; flex-direction: column; gap: 10px; background: var(--tg-theme-secondary-bg-color, #24303f); padding: 16px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         .slider-label { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 16px; }
         .label-title { display: flex; align-items: center; gap: 8px; }
@@ -49,7 +48,6 @@
         .btn-secondary { background-color: #4e5e70; color: #ffffff; }
         .status-msg { text-align: center; font-size: 15px; font-weight: 600; margin-top: 10px; }
 
-        /* Модули Хаб */
         .modules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 5px; }
         .module-card { background: var(--tg-theme-secondary-bg-color, #24303f); padding: 16px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 8px; cursor: pointer; border: 1px solid transparent; }
         .module-card:active { border-color: var(--tg-theme-button-color, #2f8cc3); background: rgba(47, 140, 195, 0.05); }
@@ -202,9 +200,14 @@
     <div class="container app-page" id="page-courses-list">
         <h1>БАЗА ЗНАНИЙ</h1>
         <p class="greeting">Тактические протоколы и инструкции</p>
-        <div id="courses-container" style="margin-top: 5px;">
-            </div>
-        <button class="btn btn-secondary" onclick="switchTab('modules')">Назад в меню</button>
+        
+        <div class="section-title" style="margin-top: 10px;">Курсы</div>
+        <div id="courses-only-container"></div>
+        
+        <div class="section-title" style="margin-top: 20px;">Базовые протоколы</div>
+        <div id="protocols-container"></div>
+
+        <button class="btn btn-secondary" style="margin-top: 20px;" onclick="switchTab('modules')">Назад в меню</button>
     </div>
 
     <div class="container app-page" id="page-course-lesson">
@@ -258,10 +261,10 @@
         let recognition = null; 
         let isRecording = false;
 
-        // БАЗА ЗНАНИЙ (С НОВЫМ КУРСОМ)
+        // БАЗА ЗНАНИЙ (Разделена на категории)
         const coursesDb = [
             {
-                id: "c_main_1", title: "Как не сгореть к 40: День 1", desc: "Что такое мужское выгорание на самом деле. Честный разбор признаков и первое задание.", progress: "Новое", locked: false,
+                id: "c_main_1", category: "course", title: "Как не сгореть к 40: День 1", desc: "Что такое мужское выгорание на самом деле. Честный разбор признаков и первое задание.", progress: "Новое", locked: false,
                 content: `<h3>День 1. Что такое мужское выгорание на самом деле</h3>
                 Большинство мужчин до последнего отказываются признавать, что у них выгорание. Кажется, что это просто усталость, лень или «надо взять себя в руки». На деле это системная штука.<br><br>
                 Мужское выгорание отличается от женского. У женщин чаще грусть, слёзы, апатия. У нас — раздражение, цинизм, желание всё послать нахуй, уход в работу, алкоголь, игры, порно или бесконечный скролл.<br><br>
@@ -286,7 +289,7 @@
                 Сохрани этот голосовой. Через неделю курса мы к нему вернёмся.`
             },
             {
-                id: "c1", title: "Выход из ямы", desc: "Базовый тактический протокол восстановления при выгорании.", progress: "Доступно", locked: false,
+                id: "c1", category: "protocol", title: "Выход из ямы", desc: "Базовый тактический протокол восстановления при выгорании.", progress: "Доступно", locked: false,
                 content: `<h3>Протокол 01: Остановка потери</h3>
                 Хватит пытаться "напрячься и сделать". Твоя система перегрета. <br><br>
                 <b>Твои действия на 48 часов:</b>
@@ -298,7 +301,7 @@
                 Это не слабость. Это перезагрузка процессора. Выполни это, и энергия вернется.`
             },
             {
-                id: "c2", title: "Дофаминовая диета", desc: "Сброс убитых рецепторов и возврат мотивации к сложным делам.", progress: "Доступно", locked: false,
+                id: "c2", category: "protocol", title: "Дофаминовая диета", desc: "Сброс убитых рецепторов и возврат мотивации к сложным делам.", progress: "Доступно", locked: false,
                 content: `<h3>Протокол 02: Сушка рецепторов</h3>
                 Мотивация пропала, потому что ты сжег дофамин на цифровой фастфуд. <br><br>
                 <b>Правило 7 дней:</b>
@@ -310,7 +313,7 @@
                 Будет ломать. Терпи. На 4-й день мозгу станет скучно, и работа покажется интересной.`
             },
             {
-                id: "c3", title: "Архитектура сна", desc: "Биохакинг восстановления. VIP-модуль.", progress: "Закрыто", locked: true, content: ""
+                id: "c3", category: "protocol", title: "Архитектура сна", desc: "Биохакинг восстановления. VIP-модуль.", progress: "Закрыто", locked: true, content: ""
             }
         ];
 
@@ -370,7 +373,7 @@
             }
         }
 
-        // ЛОГИКА КУРСОВ И БАЗЫ
+        // ЛОГИКА КУРСОВ И БАЗЫ (С РАЗДЕЛЕНИЕМ КАТЕГОРИЙ)
         function openCoursesHub() {
             document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
             document.getElementById('app-nav-bar').style.display = 'none';
@@ -379,8 +382,11 @@
         }
 
         function renderCourses() {
-            const container = document.getElementById('courses-container');
-            container.innerHTML = "";
+            const coursesContainer = document.getElementById('courses-only-container');
+            const protocolsContainer = document.getElementById('protocols-container');
+            coursesContainer.innerHTML = "";
+            protocolsContainer.innerHTML = "";
+            
             coursesDb.forEach(c => {
                 const card = document.createElement('div');
                 card.className = `course-card ${c.locked ? 'locked' : ''}`;
@@ -394,12 +400,18 @@
                     <div class="course-desc">${c.desc}</div>
                     <div class="course-progress">${c.progress}</div>
                 `;
+                
                 if (!c.locked) {
                     card.onclick = () => openLesson(c);
                 } else {
                     card.onclick = () => alert("Этот модуль пока закрыт. Требуется повышение ранга.");
                 }
-                container.appendChild(card);
+                
+                if (c.category === "course") {
+                    coursesContainer.appendChild(card);
+                } else {
+                    protocolsContainer.appendChild(card);
+                }
             });
         }
 
