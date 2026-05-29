@@ -227,7 +227,7 @@
         tg.expand(); tg.ready();
         const initData = tg.initData || "";
         let historyChartInstance = null;
-        let recognition = null; // Для записи голоса
+        let recognition = null; 
         let isRecording = false;
 
         const upcomingEvents = [
@@ -296,51 +296,71 @@
             switchTab('modules');
         }
 
-        // ЛОГИКА ГОЛОСОВОГО ВВОДА
-        function toggleVoiceRecognition() {
+        // ЛОГИКА ГОЛОСОВОГО ВВОДА (Оптимизирована для одного запроса прав)
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Голосовой ввод пока не поддерживается на твоем устройстве.");
+                return null;
+            }
+
+            const rec = new SpeechRecognition();
+            rec.lang = 'ru-RU';
+            rec.interimResults = false;
+            rec.maxAlternatives = 1;
+
             const micBtn = document.getElementById('mic-btn');
             const inputField = document.getElementById('chat-user-input');
 
-            if (isRecording) {
-                if (recognition) recognition.stop();
-                return;
-            }
-
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                alert("Голосовой ввод пока не поддерживается на твоем устройстве или браузере.");
-                return;
-            }
-
-            recognition = new SpeechRecognition();
-            recognition.lang = 'ru-RU';
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
-
-            recognition.onstart = function() {
+            rec.onstart = function() {
                 isRecording = true;
                 micBtn.classList.add('recording');
                 inputField.placeholder = "Слушаю...";
             };
 
-            recognition.onresult = function(event) {
+            rec.onresult = function(event) {
                 const transcript = event.results[0][0].transcript;
                 inputField.value += (inputField.value ? ' ' : '') + transcript;
             };
 
-            recognition.onerror = function(event) {
+            rec.onerror = function(event) {
                 console.error("Ошибка микрофона:", event.error);
-                inputField.placeholder = "Ошибка аудио";
+                if (event.error === 'not-allowed') {
+                    inputField.placeholder = "Микрофон заблокирован";
+                } else {
+                    inputField.placeholder = "Ошибка аудио";
+                }
                 setTimeout(() => inputField.placeholder = "Опиши проблему...", 2000);
             };
 
-            recognition.onend = function() {
+            rec.onend = function() {
                 isRecording = false;
                 micBtn.classList.remove('recording');
                 inputField.placeholder = "Опиши проблему...";
             };
 
-            recognition.start();
+            return rec;
+        }
+
+        function toggleVoiceRecognition() {
+            // Инициализируем микрофон только один раз за сессию
+            if (!recognition) {
+                recognition = initSpeechRecognition();
+            }
+            
+            if (!recognition) return;
+
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                try {
+                    recognition.start();
+                } catch (e) {
+                    // Если API зависло, перезапускаем принудительно
+                    recognition.stop();
+                    setTimeout(() => recognition.start(), 100);
+                }
+            }
         }
 
         async function sendAiMessage() {
