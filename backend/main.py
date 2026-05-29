@@ -22,7 +22,7 @@ DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 # --- КАСКАД ДВУХ МОДЕЛЕЙ ИИ ---
 AI_QWEN_KEY = os.getenv("AI_QWEN_KEY", "").strip()
 AI_QWEN_URL = os.getenv("AI_QWEN_URL", "https://openrouter.ai/api/v1").strip()
-AI_QWEN_MODEL = os.getenv("AI_QWEN_MODEL", "qwen/qwen-2.5-72b-instruct").strip()
+AI_QWEN_MODEL = os.getenv("AI_QWEN_MODEL", "google/gemma-2-9b-it:free").strip()
 
 AI_DEEPSEEK_KEY = os.getenv("AI_DEEPSEEK_KEY", "").strip()
 AI_DEEPSEEK_URL = os.getenv("AI_DEEPSEEK_URL", "https://api.deepseek.com/v1").strip()
@@ -106,7 +106,13 @@ async def get_current_user(tg_data: str = Header(...), db: AsyncSession = Depend
     return user
 
 async def call_ai_api(base_url: str, api_key: str, model: str, system_prompt: str, user_message: str) -> str:
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    # Заголовки, необходимые для обхода ошибки 400 на бесплатных моделях OpenRouter
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://t.me/RubezhBot", 
+        "X-Title": "Rubezh App"
+    }
     data = {
         "model": model,
         "messages": [
@@ -116,9 +122,13 @@ async def call_ai_api(base_url: str, api_key: str, model: str, system_prompt: st
         "temperature": 0.65
     }
     async with httpx.AsyncClient() as client:
-        response = await client.post(f"{base_url}/chat/completions", headers=headers, json=data, timeout=12.0)
+        response = await client.post(f"{base_url}/chat/completions", headers=headers, json=data, timeout=15.0)
+        
+        # Вытаскиваем точную причину ошибки из ответа OpenRouter для логов
         if response.status_code != 200:
-            raise Exception(f"Provider status code: {response.status_code}")
+            error_details = response.text
+            raise Exception(f"Provider status code: {response.status_code}. Details: {error_details}")
+            
         result_json = response.json()
         return result_json["choices"][0]["message"]["content"]
 
@@ -220,13 +230,13 @@ async def ai_brother_chat(payload: ChatInput, current_user: User = Depends(get_c
     )
 
     # 4. FAILOVER КАСКАД
-    # Попытка 1: Qwen
+    # Попытка 1: OpenRouter
     if AI_QWEN_KEY:
         try:
             reply = await call_ai_api(AI_QWEN_URL, AI_QWEN_KEY, AI_QWEN_MODEL, system_prompt, payload.message)
             return {"reply": reply}
         except Exception as e:
-            print(f"ERROR: Qwen failed: {e}. Switching to DeepSeek...")
+            print(f"ERROR: OpenRouter failed: {e}. Switching to DeepSeek...")
 
     # Попытка 2: DeepSeek
     if AI_DEEPSEEK_KEY:
