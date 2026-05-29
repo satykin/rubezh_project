@@ -26,6 +26,7 @@
         .app-page { display: none; width: 100%; }
         .app-page.active { display: block; }
 
+        /* Трекер */
         .slider-group { display: flex; flex-direction: column; gap: 10px; background: var(--tg-theme-secondary-bg-color, #24303f); padding: 16px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         .slider-label { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 16px; }
         .label-title { display: flex; align-items: center; gap: 8px; }
@@ -48,6 +49,7 @@
         .btn-secondary { background-color: #4e5e70; color: #ffffff; }
         .status-msg { text-align: center; font-size: 15px; font-weight: 600; margin-top: 10px; }
 
+        /* Модули Хаб */
         .modules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 5px; }
         .module-card { background: var(--tg-theme-secondary-bg-color, #24303f); padding: 16px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 8px; cursor: pointer; border: 1px solid transparent; }
         .module-card:active { border-color: var(--tg-theme-button-color, #2f8cc3); background: rgba(47, 140, 195, 0.05); }
@@ -73,23 +75,35 @@
         .event-time { font-size: 12px; color: var(--tg-theme-hint-color, #708499); }
         .event-join-btn { background: rgba(47, 140, 195, 0.12); color: var(--tg-theme-button-color, #2f8cc3); border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
 
-        /* ИНТЕРФЕЙС ЧАТА С МИКРОФОНОМ */
+        /* ИИ Брат */
         .chat-container { display: flex; flex-direction: column; background: var(--tg-theme-secondary-bg-color, #24303f); border-radius: 14px; height: 320px; box-sizing: border-box; padding: 12px; overflow-y: auto; gap: 10px; margin-bottom: 5px; }
         .chat-msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.4; text-align: left; word-wrap: break-word; }
         .msg-ai { background: var(--tg-theme-bg-color, #17212b); color: var(--tg-theme-text-color, #f5f5f5); align-self: flex-start; border-left: 3px solid #2f8cc3; }
         .msg-user { background: var(--tg-theme-button-color, #2f8cc3); color: var(--tg-theme-button-text-color, #ffffff); align-self: flex-end; }
-        
         .chat-input-row { display: flex; gap: 6px; width: 100%; align-items: center; }
         .chat-input { flex: 1; background: var(--tg-theme-bg-color, #17212b); border: 1px solid #4e5e70; color: var(--tg-theme-text-color, #f5f5f5); padding: 12px; border-radius: 10px; font-size: 14px; outline: none; }
         .chat-input:focus { border-color: var(--tg-theme-button-color, #2f8cc3); }
-        
         .chat-send-btn { background: var(--tg-theme-button-color, #2f8cc3); border: none; width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #ffffff; flex-shrink: 0; }
-        
-        /* Стили кнопки микрофона */
         .chat-mic-btn { background: var(--tg-theme-secondary-bg-color, #24303f); border: 1px solid #4e5e70; width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--tg-theme-hint-color, #708499); flex-shrink: 0; transition: all 0.2s; }
         .chat-mic-btn.recording { background: rgba(229, 115, 115, 0.15); color: #e57373; border-color: #e57373; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(229, 115, 115, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(229, 115, 115, 0); } 100% { box-shadow: 0 0 0 0 rgba(229, 115, 115, 0); } }
 
+        /* КУРСЫ И БАЗА */
+        .course-card { background: var(--tg-theme-secondary-bg-color, #24303f); padding: 16px; border-radius: 14px; margin-bottom: 12px; border-left: 4px solid #2f8cc3; display: flex; flex-direction: column; gap: 6px; cursor: pointer; transition: all 0.2s; }
+        .course-card.locked { border-left-color: #4e5e70; opacity: 0.6; cursor: not-allowed; }
+        .course-header { display: flex; justify-content: space-between; align-items: center; }
+        .course-title { font-weight: bold; font-size: 16px; color: var(--tg-theme-text-color, #f5f5f5); }
+        .course-icon { width: 20px; height: 20px; color: var(--tg-theme-hint-color, #708499); }
+        .course-desc { font-size: 13px; color: var(--tg-theme-hint-color, #708499); line-height: 1.4; }
+        .course-progress { font-size: 12px; font-weight: bold; color: #2f8cc3; margin-top: 4px; display: inline-block; background: rgba(47, 140, 195, 0.1); padding: 4px 8px; border-radius: 6px; align-self: flex-start; }
+        .course-card.locked .course-progress { color: #708499; background: rgba(112, 132, 153, 0.1); }
+        
+        .lesson-content { font-size: 15px; line-height: 1.5; color: var(--tg-theme-text-color, #f5f5f5); background: var(--tg-theme-secondary-bg-color, #24303f); padding: 20px; border-radius: 14px; text-align: left; }
+        .lesson-content h3 { color: #2f8cc3; margin-top: 0; font-size: 18px; margin-bottom: 12px; text-transform: uppercase; }
+        .lesson-content ul { padding-left: 20px; margin: 10px 0; color: var(--tg-theme-hint-color, #708499); }
+        .lesson-content li { margin-bottom: 8px; }
+
+        /* Графики и SOS */
         .chart-container { background: var(--tg-theme-secondary-bg-color, #24303f); padding: 16px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 10px; box-sizing: border-box; }
         .no-data { text-align: center; padding: 40px 20px; color: var(--tg-theme-hint-color, #708499); font-style: italic; }
         .sos-screen { display: none; width: 100%; max-width: 420px; background: var(--tg-theme-secondary-bg-color, #24303f); padding: 24px; border-radius: 16px; box-sizing: border-box; text-align: center; }
@@ -160,7 +174,7 @@
         <h1>ЭКОСИСТЕМА РУБЕЖ</h1>
         <p class="greeting">Инструменты прокачки и мужская среда</p>
         <div class="modules-grid">
-            <div class="module-card" onclick="alert('Модуль Курсы активируется в следующей версии')">
+            <div class="module-card" onclick="openCoursesHub()">
                 <div class="mod-icon"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg></div>
                 <div class="mod-title">Курсы и База</div>
                 <div class="mod-desc">Жесткий контент по выгоранию, стрессу и личной эффективности.</div>
@@ -185,6 +199,22 @@
         <div class="events-list" id="live-events-container"></div>
     </div>
 
+    <div class="container app-page" id="page-courses-list">
+        <h1>БАЗА ЗНАНИЙ</h1>
+        <p class="greeting">Тактические протоколы и инструкции</p>
+        <div id="courses-container" style="margin-top: 5px;">
+            </div>
+        <button class="btn btn-secondary" onclick="switchTab('modules')">Назад в меню</button>
+    </div>
+
+    <div class="container app-page" id="page-course-lesson">
+        <h1 id="lesson-header">Урок</h1>
+        <p class="greeting">Изучи и внедряй</p>
+        <div class="lesson-content" id="lesson-body">
+            </div>
+        <button class="btn" onclick="document.getElementById('page-course-lesson').classList.remove('active'); document.getElementById('page-courses-list').classList.add('active');">Прочитано. Внедряю</button>
+    </div>
+
     <div class="container app-page" id="page-ai-brother">
         <h1>AI БРАТ</h1>
         <p class="greeting">Прямой разбор ситуации без цензуры</p>
@@ -196,10 +226,8 @@
         <div class="chat-input-row">
             <button class="chat-mic-btn" id="mic-btn" onclick="toggleVoiceRecognition()">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                    <line x1="12" y1="19" x2="12" y2="23"></line>
-                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line>
                 </svg>
             </button>
             <input type="text" class="chat-input" id="chat-user-input" placeholder="Опиши проблему..." onkeypress="if(event.key==='Enter') sendAiMessage()">
@@ -229,6 +257,37 @@
         let historyChartInstance = null;
         let recognition = null; 
         let isRecording = false;
+
+        // БАЗА ЗНАНИЙ (МОКИ)
+        const coursesDb = [
+            {
+                id: "c1", title: "Выход из ямы", desc: "Базовый тактический протокол восстановления при выгорании.", progress: "Доступно", locked: false,
+                content: `<h3>Протокол 01: Остановка потери</h3>
+                Хватит пытаться "напрячься и сделать". Твоя система перегрета. <br><br>
+                <b>Твои действия на 48 часов:</b>
+                <ul>
+                    <li>Убери весь дешевый дофамин (Reels, шортсы, порно).</li>
+                    <li>Сон минимум 8.5 часов. Телефон в авиарежим за час до отбоя.</li>
+                    <li>Две тренировки до пота (просто выжечь кортизол).</li>
+                </ul>
+                Это не слабость. Это перезагрузка процессора. Выполни это, и энергия вернется.`
+            },
+            {
+                id: "c2", title: "Дофаминовая диета", desc: "Сброс убитых рецепторов и возврат мотивации к сложным делам.", progress: "Доступно", locked: false,
+                content: `<h3>Протокол 02: Сушка рецепторов</h3>
+                Мотивация пропала, потому что ты сжег дофамин на цифровой фастфуд. <br><br>
+                <b>Правило 7 дней:</b>
+                <ul>
+                    <li>Экранное время вне работы — не более 1 часа.</li>
+                    <li>Никаких стимуляторов психики (энергетики убрать).</li>
+                    <li>Начинай день со стакана воды и тишины, а не ленты новостей.</li>
+                </ul>
+                Будет ломать. Терпи. На 4-й день мозгу станет скучно, и работа покажется интересной.`
+            },
+            {
+                id: "c3", title: "Архитектура сна", desc: "Биохакинг восстановления. VIP-модуль.", progress: "Закрыто", locked: true, content: ""
+            }
+        ];
 
         const upcomingEvents = [
             { id: 1, name: "Живой разбор: Выход из эмоциональной ямы", time: "Сегодня в 20:00", type: "live" },
@@ -268,6 +327,7 @@
             });
         }
 
+        // ЛОГИКА ВКЛАДОК
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
@@ -285,6 +345,47 @@
             }
         }
 
+        // ЛОГИКА КУРСОВ И БАЗЫ
+        function openCoursesHub() {
+            document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
+            document.getElementById('app-nav-bar').style.display = 'none';
+            document.getElementById('page-courses-list').classList.add('active');
+            renderCourses();
+        }
+
+        function renderCourses() {
+            const container = document.getElementById('courses-container');
+            container.innerHTML = "";
+            coursesDb.forEach(c => {
+                const card = document.createElement('div');
+                card.className = `course-card ${c.locked ? 'locked' : ''}`;
+                card.innerHTML = `
+                    <div class="course-header">
+                        <div class="course-title">${c.title}</div>
+                        <div class="course-icon">
+                            ${c.locked ? '<svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>' : '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>'}
+                        </div>
+                    </div>
+                    <div class="course-desc">${c.desc}</div>
+                    <div class="course-progress">${c.progress}</div>
+                `;
+                if (!c.locked) {
+                    card.onclick = () => openLesson(c);
+                } else {
+                    card.onclick = () => alert("Этот модуль пока закрыт. Требуется повышение ранга.");
+                }
+                container.appendChild(card);
+            });
+        }
+
+        function openLesson(courseData) {
+            document.getElementById('page-courses-list').classList.remove('active');
+            document.getElementById('page-course-lesson').classList.add('active');
+            document.getElementById('lesson-header').innerText = courseData.title;
+            document.getElementById('lesson-body').innerHTML = courseData.content;
+        }
+
+        // ЛОГИКА ИИ-БРАТА С ГОЛОСОМ
         function openAiBrotherChat() {
             document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
             document.getElementById('app-nav-bar').style.display = 'none';
@@ -296,71 +397,30 @@
             switchTab('modules');
         }
 
-        // ЛОГИКА ГОЛОСОВОГО ВВОДА (Оптимизирована для одного запроса прав)
         function initSpeechRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                alert("Голосовой ввод пока не поддерживается на твоем устройстве.");
-                return null;
-            }
-
+            if (!SpeechRecognition) { alert("Голосовой ввод пока не поддерживается на твоем устройстве."); return null; }
             const rec = new SpeechRecognition();
-            rec.lang = 'ru-RU';
-            rec.interimResults = false;
-            rec.maxAlternatives = 1;
-
+            rec.lang = 'ru-RU'; rec.interimResults = false; rec.maxAlternatives = 1;
             const micBtn = document.getElementById('mic-btn');
             const inputField = document.getElementById('chat-user-input');
 
-            rec.onstart = function() {
-                isRecording = true;
-                micBtn.classList.add('recording');
-                inputField.placeholder = "Слушаю...";
-            };
-
-            rec.onresult = function(event) {
-                const transcript = event.results[0][0].transcript;
-                inputField.value += (inputField.value ? ' ' : '') + transcript;
-            };
-
+            rec.onstart = function() { isRecording = true; micBtn.classList.add('recording'); inputField.placeholder = "Слушаю..."; };
+            rec.onresult = function(event) { inputField.value += (inputField.value ? ' ' : '') + event.results[0][0].transcript; };
             rec.onerror = function(event) {
-                console.error("Ошибка микрофона:", event.error);
-                if (event.error === 'not-allowed') {
-                    inputField.placeholder = "Микрофон заблокирован";
-                } else {
-                    inputField.placeholder = "Ошибка аудио";
-                }
+                if (event.error === 'not-allowed') inputField.placeholder = "Микрофон заблокирован";
+                else inputField.placeholder = "Ошибка аудио";
                 setTimeout(() => inputField.placeholder = "Опиши проблему...", 2000);
             };
-
-            rec.onend = function() {
-                isRecording = false;
-                micBtn.classList.remove('recording');
-                inputField.placeholder = "Опиши проблему...";
-            };
-
+            rec.onend = function() { isRecording = false; micBtn.classList.remove('recording'); inputField.placeholder = "Опиши проблему..."; };
             return rec;
         }
 
         function toggleVoiceRecognition() {
-            // Инициализируем микрофон только один раз за сессию
-            if (!recognition) {
-                recognition = initSpeechRecognition();
-            }
-            
+            if (!recognition) recognition = initSpeechRecognition();
             if (!recognition) return;
-
-            if (isRecording) {
-                recognition.stop();
-            } else {
-                try {
-                    recognition.start();
-                } catch (e) {
-                    // Если API зависло, перезапускаем принудительно
-                    recognition.stop();
-                    setTimeout(() => recognition.start(), 100);
-                }
-            }
+            if (isRecording) { recognition.stop(); } 
+            else { try { recognition.start(); } catch (e) { recognition.stop(); setTimeout(() => recognition.start(), 100); } }
         }
 
         async function sendAiMessage() {
@@ -371,62 +431,38 @@
             if(!text) return;
 
             const userMsg = document.createElement('div');
-            userMsg.className = "chat-msg msg-user";
-            userMsg.innerText = text;
-            box.appendChild(userMsg);
-            input.value = "";
-            box.scrollTop = box.scrollHeight;
+            userMsg.className = "chat-msg msg-user"; userMsg.innerText = text;
+            box.appendChild(userMsg); input.value = ""; box.scrollTop = box.scrollHeight;
 
             const loadingMsg = document.createElement('div');
-            loadingMsg.className = "chat-msg msg-ai";
-            loadingMsg.id = "ai-loading-indicator";
+            loadingMsg.className = "chat-msg msg-ai"; loadingMsg.id = "ai-loading-indicator";
             loadingMsg.innerText = "Формирую тактическое решение...";
-            box.appendChild(loadingMsg);
-            box.scrollTop = box.scrollHeight;
+            box.appendChild(loadingMsg); box.scrollTop = box.scrollHeight;
 
             try {
-                const response = await fetch('/api/ai/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'tg-data': initData },
-                    body: JSON.stringify({ message: text })
-                });
-                
+                const response = await fetch('/api/ai/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', 'tg-data': initData }, body: JSON.stringify({ message: text }) });
                 loadingMsg.remove();
-
                 if (response.ok) {
                     const data = await response.json();
-                    const aiMsg = document.createElement('div');
-                    aiMsg.className = "chat-msg msg-ai";
-                    aiMsg.innerText = data.reply;
+                    const aiMsg = document.createElement('div'); aiMsg.className = "chat-msg msg-ai"; aiMsg.innerText = data.reply;
                     box.appendChild(aiMsg);
                 } else {
-                    const errMsg = document.createElement('div');
-                    errMsg.className = "chat-msg msg-ai";
-                    errMsg.style.borderLeftColor = "#e57373";
-                    errMsg.innerText = "Каналы связи забиты. Напиши через минуту.";
+                    const errMsg = document.createElement('div'); errMsg.className = "chat-msg msg-ai"; errMsg.style.borderLeftColor = "#e57373"; errMsg.innerText = "Каналы связи забиты. Напиши через минуту.";
                     box.appendChild(errMsg);
                 }
-            } catch(e) {
-                loadingMsg.remove();
-                alert("Ошибка сети.");
-            }
+            } catch(e) { loadingMsg.remove(); alert("Ошибка сети."); }
             box.scrollTop = box.scrollHeight;
         }
 
+        // ЛОГИКА ТРЕКЕРА И ГРАФИКОВ
         async function sendData() {
             const energy = parseInt(document.getElementById('energy').value);
             const irritation = parseInt(document.getElementById('irritation').value);
             const emptiness = parseInt(document.getElementById('emptiness').value);
             const statusDiv = document.getElementById('status');
             statusDiv.innerText = "Сохранение...";
-
             try {
-                const response = await fetch('/api/tracker/log', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'tg-data': initData },
-                    body: JSON.stringify({ energy, irritation, emptiness })
-                });
-
+                const response = await fetch('/api/tracker/log', { method: 'POST', headers: { 'Content-Type': 'application/json', 'tg-data': initData }, body: JSON.stringify({ energy, irritation, emptiness }) });
                 if (response.ok) {
                     statusDiv.innerText = "✊ Лог зафиксирован!";
                     setTimeout(() => {
@@ -450,55 +486,38 @@
 
                 const chartData = logs.slice(0, 7).reverse(); 
                 const daysOfWeek = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-                const labels = chartData.map(l => {
-                    const d = new Date(l.date);
-                    return [`${d.getDate()}.${(d.getMonth()+1).toString().padStart(2,'0')}`, daysOfWeek[d.getDay()]];
-                });
+                const labels = chartData.map(l => { const d = new Date(l.date); return [`${d.getDate()}.${(d.getMonth()+1).toString().padStart(2,'0')}`, daysOfWeek[d.getDay()]]; });
 
                 loader.style.display = 'none'; canvas.style.display = 'block';
                 if (historyChartInstance) { historyChartInstance.destroy(); }
                 const textThemeColor = getComputedStyle(document.body).getPropertyValue('--tg-theme-text-color') || '#f5f5f5';
 
                 historyChartInstance = new Chart(canvas, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            { label: 'Энергия', data: chartData.map(l => l.energy), borderColor: '#2f8cc3', backgroundColor: '#2f8cc3', tension: 0.2, borderWidth: 3 },
-                            { label: 'Злость', data: chartData.map(l => l.irritation), borderColor: '#e57373', backgroundColor: '#e57373', tension: 0.2, borderWidth: 3 },
-                            { label: 'Пустота', data: chartData.map(l => l.emptiness), borderColor: '#708499', backgroundColor: '#708499', tension: 0.2, borderWidth: 3 }
-                        ]
-                    },
+                    type: 'line', data: { labels: labels, datasets: [
+                        { label: 'Энергия', data: chartData.map(l => l.energy), borderColor: '#2f8cc3', backgroundColor: '#2f8cc3', tension: 0.2, borderWidth: 3 },
+                        { label: 'Злость', data: chartData.map(l => l.irritation), borderColor: '#e57373', backgroundColor: '#e57373', tension: 0.2, borderWidth: 3 },
+                        { label: 'Пустота', data: chartData.map(l => l.emptiness), borderColor: '#708499', backgroundColor: '#708499', tension: 0.2, borderWidth: 3 }
+                    ]},
                     options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 1, max: 10, ticks: { color: textThemeColor }, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { ticks: { color: textThemeColor, maxRotation: 0 }, grid: { display: false } } }, plugins: { legend: { labels: { color: textThemeColor, font: { weight: 'bold' } } } } }
                 });
             } catch (e) { loader.innerText = "Ошибка загрузки."; }
         }
 
+        // ЛОГИКА SOS
         function openSosHub(category) {
-            document.getElementById('page-input').style.display = 'none';
-            document.getElementById('page-history').style.display = 'none';
-            document.getElementById('page-modules').style.display = 'none';
-            const hub = document.getElementById('screen-sos-hub');
-            hub.style.display = 'block';
-            const db = sosDatabase[category];
-            document.getElementById('hub-title').innerText = db.title;
-            const container = document.getElementById('hub-options-container');
-            container.innerHTML = "";
+            document.getElementById('page-input').style.display = 'none'; document.getElementById('page-history').style.display = 'none'; document.getElementById('page-modules').style.display = 'none';
+            const hub = document.getElementById('screen-sos-hub'); hub.style.display = 'block';
+            const db = sosDatabase[category]; document.getElementById('hub-title').innerText = db.title;
+            const container = document.getElementById('hub-options-container'); container.innerHTML = "";
             db.options.forEach(opt => {
-                const card = document.createElement('div');
-                card.className = "sos-option-card";
-                card.innerHTML = `<div class="opt-title">${opt.title}</div>`;
-                card.onclick = () => { launchAction(opt); };
-                container.appendChild(card);
+                const card = document.createElement('div'); card.className = "sos-option-card"; card.innerHTML = `<div class="opt-title">${opt.title}</div>`;
+                card.onclick = () => { launchAction(opt); }; container.appendChild(card);
             });
         }
 
         function launchAction(opt) {
-            document.getElementById('screen-sos-hub').style.display = 'none';
-            document.getElementById('screen-action').style.display = 'block';
-            const box = document.getElementById('box-content');
-            const btn = document.getElementById('action-main-btn');
-            document.getElementById('action-title').innerText = opt.title;
+            document.getElementById('screen-sos-hub').style.display = 'none'; document.getElementById('screen-action').style.display = 'block';
+            const box = document.getElementById('box-content'); const btn = document.getElementById('action-main-btn'); document.getElementById('action-title').innerText = opt.title;
 
             if (opt.type === "text") {
                 box.innerHTML = opt.text; btn.innerText = "В модули"; btn.onclick = () => { document.getElementById('screen-action').style.display = 'none'; document.getElementById('app-nav-bar').style.display='flex'; switchTab('modules'); };
@@ -520,8 +539,7 @@
         }
 
         function runBreathing() {
-            const c = document.getElementById('b-circle'); const p = document.getElementById('b-phase');
-            const btn = document.getElementById('action-main-btn'); btn.disabled = true;
+            const c = document.getElementById('b-circle'); const p = document.getElementById('b-phase'); const btn = document.getElementById('action-main-btn'); btn.disabled = true;
             p.innerText = "Вдох..."; c.style.transform = "scale(1.4)";
             setTimeout(() => { p.innerText = "Задержи..."; }, 4000);
             setTimeout(() => { p.innerText = "Выдох..."; c.style.transform = "scale(1.0)"; }, 8000);
