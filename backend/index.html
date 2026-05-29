@@ -19,7 +19,6 @@
         h1 { font-size: 24px; text-align: center; margin: 0; font-weight: 800; letter-spacing: 1px; color: var(--tg-theme-button-color, #2f8cc3); }
         .greeting { text-align: center; font-size: 13px; color: var(--tg-theme-hint-color, #708499); margin: -5px 0 10px 0; }
         
-        /* Навигация */
         .tabs { display: flex; width: 100%; max-width: 420px; background: var(--tg-theme-secondary-bg-color, #24303f); border-radius: 10px; padding: 4px; box-sizing: border-box; margin-bottom: 10px; }
         .tab-btn { flex: 1; padding: 10px; text-align: center; background: transparent; border: none; color: var(--tg-theme-hint-color, #708499); font-weight: bold; font-size: 13px; cursor: pointer; border-radius: 8px; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
         .tab-btn.active { background: var(--tg-theme-bg-color, #17212b); color: var(--tg-theme-button-color, #2f8cc3); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
@@ -27,7 +26,6 @@
         .app-page { display: none; width: 100%; }
         .app-page.active { display: block; }
 
-        /* Трекер */
         .slider-group { display: flex; flex-direction: column; gap: 10px; background: var(--tg-theme-secondary-bg-color, #24303f); padding: 16px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         .slider-label { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 16px; }
         .label-title { display: flex; align-items: center; gap: 8px; }
@@ -50,7 +48,6 @@
         .btn-secondary { background-color: #4e5e70; color: #ffffff; }
         .status-msg { text-align: center; font-size: 15px; font-weight: 600; margin-top: 10px; }
 
-        /* Модули */
         .modules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 5px; }
         .module-card { background: var(--tg-theme-secondary-bg-color, #24303f); padding: 16px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 8px; cursor: pointer; border: 1px solid transparent; }
         .module-card:active { border-color: var(--tg-theme-button-color, #2f8cc3); background: rgba(47, 140, 195, 0.05); }
@@ -59,41 +56,40 @@
         .mod-title { font-weight: bold; font-size: 15px; color: var(--tg-theme-text-color, #f5f5f5); }
         .mod-desc { font-size: 12px; color: var(--tg-theme-hint-color, #708499); line-height: 1.3; }
 
-        /* Мероприятия (Чистый дизайн с SVG) */
         .section-title { font-size: 16px; font-weight: bold; color: var(--tg-theme-hint-color, #708499); margin: 15px 0 5px 0; text-transform: uppercase; letter-spacing: 0.5px; }
         .events-list { display: flex; flex-direction: column; gap: 10px; }
-        
         .event-card { background: var(--tg-theme-secondary-bg-color, #24303f); padding: 14px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; }
         .event-card.live { border-left: 4px solid #2f8cc3; }
         .event-card.vip { border-left: 4px solid #ffb300; }
         .event-card.challenge { border-left: 4px solid #4caf50; }
-        
         .event-left-block { display: flex; align-items: center; gap: 12px; text-align: left; }
         .event-icon { width: 22px; height: 22px; flex-shrink: 0; display: flex; align-items: center; }
         .event-icon svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-        
         .event-card.live .event-icon { color: #2f8cc3; }
         .event-card.vip .event-icon { color: #ffb300; }
         .event-card.challenge .event-icon { color: #4caf50; }
-        
         .event-info { display: flex; flex-direction: column; gap: 3px; }
         .event-name { font-weight: bold; font-size: 14px; line-height: 1.3; }
         .event-time { font-size: 12px; color: var(--tg-theme-hint-color, #708499); }
-        
         .event-join-btn { background: rgba(47, 140, 195, 0.12); color: var(--tg-theme-button-color, #2f8cc3); border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
-        .event-join-btn:active { background: var(--tg-theme-button-color, #2f8cc3); color: #ffffff; }
 
-        /* Окно ЧАТА ИИ-БРАТА */
+        /* ИНТЕРФЕЙС ЧАТА С МИКРОФОНОМ */
         .chat-container { display: flex; flex-direction: column; background: var(--tg-theme-secondary-bg-color, #24303f); border-radius: 14px; height: 320px; box-sizing: border-box; padding: 12px; overflow-y: auto; gap: 10px; margin-bottom: 5px; }
         .chat-msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.4; text-align: left; word-wrap: break-word; }
         .msg-ai { background: var(--tg-theme-bg-color, #17212b); color: var(--tg-theme-text-color, #f5f5f5); align-self: flex-start; border-left: 3px solid #2f8cc3; }
         .msg-user { background: var(--tg-theme-button-color, #2f8cc3); color: var(--tg-theme-button-text-color, #ffffff); align-self: flex-end; }
-        .chat-input-row { display: flex; gap: 8px; width: 100%; }
+        
+        .chat-input-row { display: flex; gap: 6px; width: 100%; align-items: center; }
         .chat-input { flex: 1; background: var(--tg-theme-bg-color, #17212b); border: 1px solid #4e5e70; color: var(--tg-theme-text-color, #f5f5f5); padding: 12px; border-radius: 10px; font-size: 14px; outline: none; }
         .chat-input:focus { border-color: var(--tg-theme-button-color, #2f8cc3); }
+        
         .chat-send-btn { background: var(--tg-theme-button-color, #2f8cc3); border: none; width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #ffffff; flex-shrink: 0; }
+        
+        /* Стили кнопки микрофона */
+        .chat-mic-btn { background: var(--tg-theme-secondary-bg-color, #24303f); border: 1px solid #4e5e70; width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--tg-theme-hint-color, #708499); flex-shrink: 0; transition: all 0.2s; }
+        .chat-mic-btn.recording { background: rgba(229, 115, 115, 0.15); color: #e57373; border-color: #e57373; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(229, 115, 115, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(229, 115, 115, 0); } 100% { box-shadow: 0 0 0 0 rgba(229, 115, 115, 0); } }
 
-        /* Графики и SOS */
         .chart-container { background: var(--tg-theme-secondary-bg-color, #24303f); padding: 16px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 10px; box-sizing: border-box; }
         .no-data { text-align: center; padding: 40px 20px; color: var(--tg-theme-hint-color, #708499); font-style: italic; }
         .sos-screen { display: none; width: 100%; max-width: 420px; background: var(--tg-theme-secondary-bg-color, #24303f); padding: 24px; border-radius: 16px; box-sizing: border-box; text-align: center; }
@@ -169,13 +165,11 @@
                 <div class="mod-title">Курсы и База</div>
                 <div class="mod-desc">Жесткий контент по выгоранию, стрессу и личной эффективности.</div>
             </div>
-            
             <div class="module-card" onclick="openAiBrotherChat()">
                 <div class="mod-icon"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3"></path></svg></div>
                 <div class="mod-title">AI Брат</div>
                 <div class="mod-desc">Твой карманный ментор. Выслушает, разберет зажим, подскажет решение 24/7.</div>
             </div>
-            
             <div class="module-card" onclick="alert('Переход в закрытый чат...')">
                 <div class="mod-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
                 <div class="mod-title">Комьюнити</div>
@@ -187,7 +181,6 @@
                 <div class="mod-desc">Групповые испытания на прочность и внедрение железных привычек.</div>
             </div>
         </div>
-
         <div class="section-title">Ближайшие мероприятия</div>
         <div class="events-list" id="live-events-container"></div>
     </div>
@@ -201,7 +194,15 @@
         </div>
         
         <div class="chat-input-row">
-            <input type="text" class="chat-input" id="chat-user-input" placeholder="Опиши зажим или проблему..." onkeypress="if(event.key==='Enter') sendAiMessage()">
+            <button class="chat-mic-btn" id="mic-btn" onclick="toggleVoiceRecognition()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+            </button>
+            <input type="text" class="chat-input" id="chat-user-input" placeholder="Опиши проблему..." onkeypress="if(event.key==='Enter') sendAiMessage()">
             <button class="chat-send-btn" onclick="sendAiMessage()">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
             </button>
@@ -214,7 +215,6 @@
         <div class="sos-menu" id="hub-options-container"></div>
         <button class="btn btn-secondary" onclick="tg.close()">Закрыть</button>
     </div>
-
     <div class="sos-screen" id="screen-action">
         <div class="sos-title" id="action-title" style="color: #2f8cc3;">Практика</div>
         <div id="box-content" style="margin: 20px 0;"></div>
@@ -227,6 +227,8 @@
         tg.expand(); tg.ready();
         const initData = tg.initData || "";
         let historyChartInstance = null;
+        let recognition = null; // Для записи голоса
+        let isRecording = false;
 
         const upcomingEvents = [
             { id: 1, name: "Живой разбор: Выход из эмоциональной ямы", time: "Сегодня в 20:00", type: "live" },
@@ -269,7 +271,7 @@
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
-            document.getElementById('app-nav-bar').style.display = 'flex'; // Всегда возвращаем табы
+            document.getElementById('app-nav-bar').style.display = 'flex';
             if (tab === 'input') {
                 document.querySelectorAll('.tab-btn')[0].classList.add('active');
                 document.getElementById('page-input').classList.add('active');
@@ -283,19 +285,66 @@
             }
         }
 
-        // Логика переключения ИИ-Чата
         function openAiBrotherChat() {
             document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
-            document.getElementById('app-nav-bar').style.display = 'none'; // Прячем верхний бар для погружения
+            document.getElementById('app-nav-bar').style.display = 'none';
             document.getElementById('page-ai-brother').classList.add('active');
         }
 
         function closeAiBrotherChat() {
+            if(isRecording && recognition) recognition.stop();
             switchTab('modules');
         }
 
-        // Отправка сообщений в ИИ-Брат на бэкенд
+        // ЛОГИКА ГОЛОСОВОГО ВВОДА
+        function toggleVoiceRecognition() {
+            const micBtn = document.getElementById('mic-btn');
+            const inputField = document.getElementById('chat-user-input');
+
+            if (isRecording) {
+                if (recognition) recognition.stop();
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Голосовой ввод пока не поддерживается на твоем устройстве или браузере.");
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.lang = 'ru-RU';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = function() {
+                isRecording = true;
+                micBtn.classList.add('recording');
+                inputField.placeholder = "Слушаю...";
+            };
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                inputField.value += (inputField.value ? ' ' : '') + transcript;
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Ошибка микрофона:", event.error);
+                inputField.placeholder = "Ошибка аудио";
+                setTimeout(() => inputField.placeholder = "Опиши проблему...", 2000);
+            };
+
+            recognition.onend = function() {
+                isRecording = false;
+                micBtn.classList.remove('recording');
+                inputField.placeholder = "Опиши проблему...";
+            };
+
+            recognition.start();
+        }
+
         async function sendAiMessage() {
+            if(isRecording && recognition) recognition.stop();
             const input = document.getElementById('chat-user-input');
             const box = document.getElementById('chat-box');
             const text = input.value.trim();
@@ -333,6 +382,7 @@
                 } else {
                     const errMsg = document.createElement('div');
                     errMsg.className = "chat-msg msg-ai";
+                    errMsg.style.borderLeftColor = "#e57373";
                     errMsg.innerText = "Каналы связи забиты. Напиши через минуту.";
                     box.appendChild(errMsg);
                 }
